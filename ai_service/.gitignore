@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Secrets
+.env
+.env.local
+
+# Model cache / large files
+*.bin
+*.pt
+*.safetensors
+models/
+cache/
+
+# OS
+.DS_Store
+Thumbs.db
