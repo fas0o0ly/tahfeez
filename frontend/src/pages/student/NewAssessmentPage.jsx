@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import WordAlignmentResult from '../../components/assessment/WordAlignmentResult';
 import Button from '../../components/common/Button';
@@ -9,13 +10,6 @@ import { useMemorizationRecorder } from '../../hooks/useMemorizationRecorder';
 import { useSurahs } from '../../hooks/useQuran';
 import toast from 'react-hot-toast';
 
-const PHASE_LABEL = {
-  recording:  'Recording — recite clearly',
-  recorded:   'Recording ready — review and submit',
-  uploading:  'Uploading recitation...',
-  processing: 'Transcribing and checking your recitation...',
-};
-
 const scoreColor = (score) => {
   if (score >= 80) return 'text-emerald-600';
   if (score >= 60) return 'text-amber-600';
@@ -23,6 +17,7 @@ const scoreColor = (score) => {
 };
 
 const NewAssessmentPage = () => {
+  const { t } = useTranslation();
   const { surahs, loading: surahsLoading } = useSurahs();
   const {
     phase, assessment, errorMessage,
@@ -35,6 +30,13 @@ const NewAssessmentPage = () => {
   const [fromVerse, setFromVerse]             = useState(1);
   const [toVerse, setToVerse]                 = useState(1);
 
+  const PHASE_LABEL = {
+    recording:  t('assess.new.phase.recording'),
+    recorded:   t('assess.new.phase.recorded'),
+    uploading:  t('assess.new.phase.uploading'),
+    processing: t('assess.new.phase.processing'),
+  };
+
   const handleSurahChange = (surahId) => {
     const surah = surahs.find((s) => s.id === surahId);
     setSelectedSurahId(surahId);
@@ -44,13 +46,13 @@ const NewAssessmentPage = () => {
   };
 
   const handleSubmit = () => {
-    if (!selectedSurahId) { toast.error('Please select a surah'); return; }
-    if (fromVerse > toVerse) { toast.error('Start verse must not exceed end verse'); return; }
+    if (!selectedSurahId) { toast.error(t('assess.new.selectSurahError')); return; }
+    if (fromVerse > toVerse) { toast.error(t('assess.new.verseError')); return; }
     submit(selectedSurahId, fromVerse, toVerse);
   };
 
   return (
-    <DashboardLayout title="New Assessment">
+    <DashboardLayout title={t('assess.new.pageTitle')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -65,7 +67,7 @@ const NewAssessmentPage = () => {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          My Assessments
+          {t('assess.new.back')}
         </Link>
 
         <AnimatePresence>
@@ -78,17 +80,17 @@ const NewAssessmentPage = () => {
               className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-5"
             >
               <h2 className="font-display text-xl font-semibold text-forest-900 mb-1">
-                New Recitation Assessment
+                {t('assess.new.setupTitle')}
               </h2>
               <p className="text-sm text-gray-400 mb-5">
-                Checks whether you said the right words in the right order — not Tajweed or pronunciation.
+                {t('assess.new.setupSubtitle')}
               </p>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Surah</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('assess.new.surahLabel')}</label>
                 {surahsLoading ? (
                   <div className="flex items-center gap-2 text-sm text-gray-400 py-3">
-                    <Spinner size="sm" /> Loading surahs...
+                    <Spinner size="sm" /> {t('assess.new.loadingSurahs')}
                   </div>
                 ) : (
                   <select
@@ -97,7 +99,7 @@ const NewAssessmentPage = () => {
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm bg-white
                                focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400"
                   >
-                    <option value="">— Choose a surah —</option>
+                    <option value="">{t('assess.new.selectSurah')}</option>
                     {surahs.map((s) => (
                       <option key={s.id} value={s.id}>
                         {s.surah_number}. {s.name_transliteration} ({s.name_arabic})
@@ -110,7 +112,7 @@ const NewAssessmentPage = () => {
               {selectedSurah && (
                 <div className="grid grid-cols-2 gap-3 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">From Verse</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('assess.new.fromVerse')}</label>
                     <input
                       type="number"
                       min={1}
@@ -122,7 +124,7 @@ const NewAssessmentPage = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">To Verse</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('assess.new.toVerse')}</label>
                     <input
                       type="number"
                       min={fromVerse}
@@ -142,7 +144,7 @@ const NewAssessmentPage = () => {
                 onClick={startRecording}
                 disabled={!selectedSurahId || surahsLoading}
               >
-                Start Recording
+                {t('assess.new.startRecording')}
               </Button>
             </motion.div>
           )}
@@ -160,7 +162,7 @@ const NewAssessmentPage = () => {
               )}
               {isBusy && <Spinner size="sm" />}
               <p className="text-sm font-medium text-gray-700">
-                {isComplete ? 'Result' : isError ? 'Something went wrong' : PHASE_LABEL[phase]}
+                {isComplete ? t('assess.new.resultLabel') : isError ? t('assess.new.errorLabel') : PHASE_LABEL[phase]}
               </p>
             </div>
 
@@ -183,32 +185,32 @@ const NewAssessmentPage = () => {
             <div className="mt-5 flex gap-3">
               {isRecording && (
                 <Button variant="danger" size="full" onClick={stopRecording}>
-                  Stop Recording
+                  {t('assess.new.stopRecording')}
                 </Button>
               )}
               {isRecorded && (
                 <>
                   <Button variant="secondary" size="md" onClick={reset}>
-                    Re-record
+                    {t('assess.new.reRecord')}
                   </Button>
                   <Button variant="primary" size="full" onClick={handleSubmit}>
-                    Submit for Checking
+                    {t('assess.new.submitBtn')}
                   </Button>
                 </>
               )}
               {isComplete && (
                 <>
                   <Button variant="secondary" size="md" onClick={reset}>
-                    New Check
+                    {t('assess.new.newCheck')}
                   </Button>
                   <Link to="/student/assessments" className="flex-1">
-                    <Button variant="primary" size="full">View All Results</Button>
+                    <Button variant="primary" size="full">{t('assess.new.viewAll')}</Button>
                   </Link>
                 </>
               )}
               {isError && (
                 <Button variant="secondary" size="full" onClick={reset}>
-                  Try Again
+                  {t('assess.new.tryAgain')}
                 </Button>
               )}
             </div>

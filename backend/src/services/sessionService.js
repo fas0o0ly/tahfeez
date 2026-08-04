@@ -168,16 +168,18 @@ const listSessionsForStudent = async (studentId, filters) => {
   };
 
   const offset = (filters.page - 1) * filters.limit;
-  // Allow filtering to a single allowed status (e.g. 'live' for dashboard),
-  // but never let students see draft/completed/cancelled sessions.
   const STUDENT_ALLOWED_STATUSES = ['scheduled', 'live'];
-  const statusCondition =
-    filters.status && STUDENT_ALLOWED_STATUSES.includes(filters.status)
-      ? `s.status = '${filters.status}'`
-      : `s.status IN ('scheduled', 'live')`;
-  const conditions = [statusCondition];
+  const conditions = [];
   const params = [];
   let idx = 1;
+
+  // Always restrict students to visible statuses; optionally narrow to one
+  if (filters.status && STUDENT_ALLOWED_STATUSES.includes(filters.status)) {
+    conditions.push(`s.status = $${idx++}`);
+    params.push(filters.status);
+  } else {
+    conditions.push(`s.status IN ('scheduled', 'live')`);
+  }
 
   if (effectiveFilters.gender) {
     conditions.push(`s.session_gender = $${idx++}`);

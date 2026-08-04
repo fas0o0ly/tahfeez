@@ -1,6 +1,7 @@
 // src/pages/shared/ProfilePage.jsx
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -53,6 +54,7 @@ const Section = ({ title, subtitle, children }) => (
 // ─── Avatar section ────────────────────────────────────────────────────────
 
 const AvatarSection = ({ profile, onUpload, onRemove, saving }) => {
+  const { t } = useTranslation();
   const fileRef = useRef(null);
 
   const handleFileChange = (e) => {
@@ -62,7 +64,7 @@ const AvatarSection = ({ profile, onUpload, onRemove, saving }) => {
   };
 
   return (
-    <Section title="Profile Photo" subtitle="JPG, PNG or WebP — max 5MB">
+    <Section title={t('profile.photo.title')} subtitle={t('profile.photo.subtitle')}>
       <div className="flex items-center gap-5">
         <Avatar src={profile?.avatar_url} name={profile?.full_name} size="2xl" />
         <div className="flex flex-col gap-2">
@@ -79,7 +81,7 @@ const AvatarSection = ({ profile, onUpload, onRemove, saving }) => {
             loading={saving}
             onClick={() => fileRef.current?.click()}
           >
-            Upload Photo
+            {t('profile.photo.upload')}
           </Button>
           {profile?.avatar_url && (
             <Button
@@ -89,7 +91,7 @@ const AvatarSection = ({ profile, onUpload, onRemove, saving }) => {
               onClick={onRemove}
               className="text-red-500 hover:text-red-600 hover:bg-red-50"
             >
-              Remove
+              {t('profile.photo.remove')}
             </Button>
           )}
         </div>
@@ -101,6 +103,7 @@ const AvatarSection = ({ profile, onUpload, onRemove, saving }) => {
 // ─── Main component ────────────────────────────────────────────────────────
 
 const ProfilePage = () => {
+  const { t } = useTranslation();
   const { user, updateUser } = useAuth();
   const { profile, loading, saving, updateProfile, uploadAvatar, removeAvatar } = useProfile();
 
@@ -188,9 +191,9 @@ const ProfilePage = () => {
         className="max-w-3xl mx-auto"
       >
         <div className="mb-6">
-          <h2 className="font-display text-2xl font-semibold text-forest-900">My Profile</h2>
+          <h2 className="font-display text-2xl font-semibold text-forest-900">{t('profile.title')}</h2>
           <p className="text-gray-500 text-sm mt-0.5">
-            Manage your personal information and account settings
+            {t('profile.subtitle')}
           </p>
         </div>
 
@@ -204,19 +207,19 @@ const ProfilePage = () => {
           />
 
           {/* Account info — read only */}
-          <Section title="Account" subtitle="These fields cannot be changed here">
+          <Section title={t('profile.account.title')} subtitle={t('profile.account.subtitle')}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Email</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.account.email')}</label>
                 <div className="flex items-center gap-2">
                   <p className="text-sm text-gray-500 bg-gray-50 px-4 py-3 rounded-xl flex-1">
                     {form.email}
                   </p>
-                  {form.email_verified && <Badge variant="success">Verified</Badge>}
+                  {form.email_verified && <Badge variant="success">{t('profile.account.verified')}</Badge>}
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Role</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.account.role')}</label>
                 <p className="text-sm text-gray-500 bg-gray-50 px-4 py-3 rounded-xl capitalize">
                   {form.role}
                 </p>
@@ -225,17 +228,17 @@ const ProfilePage = () => {
           </Section>
 
           {/* Personal info */}
-          <Section title="Personal Information">
+          <Section title={t('profile.personal.title')}>
             <div className="grid sm:grid-cols-2 gap-4">
               <Input
-                label="Full name"
+                label={t('profile.personal.fullName')}
                 name="full_name"
                 value={form.full_name ?? ''}
                 onChange={handleChange}
                 disabled={saving}
               />
               <Input
-                label="Phone"
+                label={t('profile.personal.phone')}
                 name="phone"
                 type="tel"
                 value={form.phone ?? ''}
@@ -244,7 +247,7 @@ const ProfilePage = () => {
                 disabled={saving}
               />
               <Input
-                label="Date of birth"
+                label={t('profile.personal.dob')}
                 name="date_of_birth"
                 type="date"
                 value={form.date_of_birth?.split('T')[0] ?? ''}
@@ -252,7 +255,7 @@ const ProfilePage = () => {
                 disabled={saving}
               />
               <Input
-                label="Nationality"
+                label={t('profile.personal.nationality')}
                 name="nationality"
                 value={form.nationality ?? ''}
                 onChange={handleChange}
@@ -260,7 +263,7 @@ const ProfilePage = () => {
                 disabled={saving}
               />
               <SelectField
-                label="Preferred language"
+                label={t('profile.personal.language')}
                 name="preferred_language"
                 value={form.preferred_language}
                 onChange={handleChange}
@@ -275,23 +278,23 @@ const ProfilePage = () => {
 
           {/* Student-specific */}
           {user.role === 'student' && (
-            <Section title="Student Information">
+            <Section title={t('profile.student.title')}>
               <div className="grid sm:grid-cols-2 gap-4">
                 <SelectField
-                  label="Current level"
+                  label={t('profile.student.level')}
                   name="current_level"
                   value={form.current_level}
                   onChange={handleChange}
                   disabled={saving}
                 >
-                  <option value="">Not set</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
+                  <option value="">{t('profile.student.level.notSet')}</option>
+                  <option value="beginner">{t('profile.student.level.beginner')}</option>
+                  <option value="intermediate">{t('profile.student.level.intermediate')}</option>
+                  <option value="advanced">{t('profile.student.level.advanced')}</option>
                 </SelectField>
 
                 <Input
-                  label="Guardian name"
+                  label={t('profile.student.guardianName')}
                   name="guardian_name"
                   value={form.guardian_name ?? ''}
                   onChange={handleChange}
@@ -299,7 +302,7 @@ const ProfilePage = () => {
                 />
 
                 <Input
-                  label="Guardian phone"
+                  label={t('profile.student.guardianPhone')}
                   name="guardian_phone"
                   type="tel"
                   value={form.guardian_phone ?? ''}
@@ -309,7 +312,7 @@ const ProfilePage = () => {
               </div>
 
               <div className="mt-4">
-                <label className="text-sm font-medium text-gray-700">Notes</label>
+                <label className="text-sm font-medium text-gray-700">{t('profile.student.notes')}</label>
                 <textarea
                   name="notes"
                   value={form.notes ?? ''}
@@ -328,10 +331,10 @@ const ProfilePage = () => {
           {/* Teacher-specific */}
           {user.role === 'teacher' && (
             <>
-              <Section title="Professional Information">
+              <Section title={t('profile.teacher.profTitle')}>
                 <div className="grid sm:grid-cols-2 gap-4 mb-4">
                   <Input
-                    label="Years of experience"
+                    label={t('profile.teacher.yearsExp')}
                     name="years_experience"
                     type="number"
                     min={0}
@@ -341,7 +344,7 @@ const ProfilePage = () => {
                     disabled={saving}
                   />
                   <Input
-                    label="Max students"
+                    label={t('profile.teacher.maxStudents')}
                     name="max_students"
                     type="number"
                     min={1}
@@ -351,7 +354,7 @@ const ProfilePage = () => {
                     disabled={saving}
                   />
                   <SelectField
-                    label="Timezone"
+                    label={t('profile.teacher.timezone')}
                     name="timezone"
                     value={form.timezone}
                     onChange={handleChange}
@@ -367,7 +370,7 @@ const ProfilePage = () => {
                     <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
                   </SelectField>
                   <Input
-                    label="CV / Resume link"
+                    label={t('profile.teacher.cvLink')}
                     name="cv_url"
                     type="url"
                     value={form.cv_url ?? ''}
@@ -379,8 +382,8 @@ const ProfilePage = () => {
 
                 <div className="mb-4">
                   <label className="text-sm font-medium text-gray-700">
-                    Specializations
-                    <span className="text-xs text-gray-400 font-normal ml-1">(comma-separated)</span>
+                    {t('profile.teacher.specializations')}
+                    <span className="text-xs text-gray-400 font-normal ml-1">{t('profile.teacher.specializationHint')}</span>
                   </label>
                   <input
                     type="text"
@@ -396,7 +399,7 @@ const ProfilePage = () => {
 
                 <div className="mb-4">
                   <label className="text-sm font-medium text-gray-700 block mb-2">
-                    Available days
+                    {t('profile.teacher.availableDays')}
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {DAYS.map((day) => (
@@ -419,7 +422,7 @@ const ProfilePage = () => {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Qualifications</label>
+                  <label className="text-sm font-medium text-gray-700">{t('profile.teacher.qualifications')}</label>
                   <textarea
                     name="qualifications"
                     value={form.qualifications ?? ''}
@@ -433,16 +436,16 @@ const ProfilePage = () => {
                 </div>
               </Section>
 
-              <Section title="Bio & Ijazah">
+              <Section title={t('profile.teacher.bioTitle')}>
                 <div className="mb-4">
-                  <label className="text-sm font-medium text-gray-700">Bio</label>
+                  <label className="text-sm font-medium text-gray-700">{t('profile.teacher.bio')}</label>
                   <textarea
                     name="bio"
                     value={form.bio ?? ''}
                     onChange={handleChange}
                     disabled={saving}
                     rows={4}
-                    placeholder="Tell students about yourself..."
+                    placeholder={t('profile.teacher.bioPlaceholder')}
                     className="mt-1.5 w-full px-4 py-3 rounded-xl border border-gray-200 text-sm
                                focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400
                                transition-all resize-none disabled:bg-gray-50 placeholder:text-gray-400"
@@ -451,9 +454,9 @@ const ProfilePage = () => {
 
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <label className="text-sm font-medium text-gray-700">Ijazah Chain</label>
+                    <label className="text-sm font-medium text-gray-700">{t('profile.teacher.ijazahChain')}</label>
                     {form.ijazah_verified && (
-                      <Badge variant="gold">✓ Verified by Admin</Badge>
+                      <Badge variant="gold">{t('profile.teacher.ijazahVerified')}</Badge>
                     )}
                   </div>
                   <textarea
@@ -462,7 +465,7 @@ const ProfilePage = () => {
                     onChange={handleChange}
                     disabled={saving}
                     rows={3}
-                    placeholder="Describe your chain of narration..."
+                    placeholder={t('profile.teacher.ijazahPlaceholder')}
                     className="mt-0.5 w-full px-4 py-3 rounded-xl border border-gray-200 text-sm
                                focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400
                                transition-all resize-none disabled:bg-gray-50 placeholder:text-gray-400"
@@ -474,9 +477,9 @@ const ProfilePage = () => {
 
           {/* Admin-specific */}
           {user.role === 'admin' && (
-            <Section title="Admin Information">
+            <Section title={t('profile.admin.title')}>
               <Input
-                label="Department"
+                label={t('profile.admin.department')}
                 name="department"
                 value={form.department ?? ''}
                 onChange={handleChange}
@@ -494,7 +497,7 @@ const ProfilePage = () => {
               size="md"
               loading={saving}
             >
-              Save Changes
+              {t('profile.saveChanges')}
             </Button>
           </div>
         </form>

@@ -16,19 +16,51 @@ const {
 
 const router = express.Router();
 
-// Strict rate limiting on sensitive auth endpoints
-const authLimiter = rateLimit({
+// Per-route rate limiters — specific windows and caps per operation
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 500,
-  message: { success: false, message: 'Too many attempts. Please try again in 15 minutes.' },
+  max: 10,
+  message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 const registerLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
-  max: 200,
+  max: 10,
   message: { success: false, message: 'Too many registration attempts. Try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const forgotPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many password reset requests. Try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resetPasswordLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many reset attempts. Try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: 'Too many resend attempts. Try again in an hour.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const refreshTokenLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  message: { success: false, message: 'Too many refresh attempts. Try again shortly.' },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -36,11 +68,11 @@ const registerLimiter = rateLimit({
 // ─── Public routes ─────────────────────────────────────────────────────────
 router.post('/register', registerLimiter, registerValidator, validate, asyncHandler(authController.register));
 router.get('/verify-email', asyncHandler(authController.verifyEmail));
-router.post('/login', authLimiter, loginValidator, validate, asyncHandler(authController.login));
-router.post('/refresh-token', asyncHandler(authController.refreshToken));
-router.post('/forgot-password', authLimiter, forgotPasswordValidator, validate, asyncHandler(authController.forgotPassword));
-router.post('/reset-password', authLimiter, resetPasswordValidator, validate, asyncHandler(authController.resetPassword));
-router.post('/resend-verification', authLimiter, resendVerificationValidator, validate, asyncHandler(authController.resendVerification));
+router.post('/login', loginLimiter, loginValidator, validate, asyncHandler(authController.login));
+router.post('/refresh-token', refreshTokenLimiter, asyncHandler(authController.refreshToken));
+router.post('/forgot-password', forgotPasswordLimiter, forgotPasswordValidator, validate, asyncHandler(authController.forgotPassword));
+router.post('/reset-password', resetPasswordLimiter, resetPasswordValidator, validate, asyncHandler(authController.resetPassword));
+router.post('/resend-verification', resendVerificationLimiter, resendVerificationValidator, validate, asyncHandler(authController.resendVerification));
 
 // ─── Protected routes ──────────────────────────────────────────────────────
 router.post('/logout', authenticate, asyncHandler(authController.logout));

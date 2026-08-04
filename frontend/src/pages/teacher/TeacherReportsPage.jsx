@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import ReportFilters from '../../components/reports/ReportFilters';
@@ -26,22 +27,26 @@ const SectionTitle = ({ title, sub }) => (
 
 const Divider = () => <hr className="my-8 border-gray-100" />;
 
-const PrintButton = () => (
-  <button
-    onClick={() => window.print()}
-    className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl
-               bg-forest-600 text-white text-xs font-medium
-               hover:bg-forest-700 transition-colors print:hidden"
-  >
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round"
-        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-    </svg>
-    Print Report
-  </button>
-);
+const PrintButton = () => {
+  const { t } = useTranslation();
+  return (
+    <button
+      onClick={() => window.print()}
+      className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl
+                 bg-forest-600 text-white text-xs font-medium
+                 hover:bg-forest-700 transition-colors print:hidden"
+    >
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round"
+          d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+      </svg>
+      {t('reports.printBtn')}
+    </button>
+  );
+};
 
 const TeacherReportsPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [period, setPeriod]               = useState('all');
   const [teacherReport, setTeacherReport] = useState(null);
@@ -68,7 +73,7 @@ const TeacherReportsPage = () => {
         const all = contRes.data.data.contacts || [];
         setStudents(all.filter((c) => c.role === 'student'));
       })
-      .catch(() => toast.error('Failed to load report'))
+      .catch(() => toast.error(t('reports.failedLoad')))
       .finally(() => setLoadingTeacher(false));
   }, [user?.id, period]);
 
@@ -106,24 +111,24 @@ const TeacherReportsPage = () => {
   const selectedStudent = students.find((s) => s.id === selectedId);
 
   return (
-    <DashboardLayout title="Reports">
+    <DashboardLayout title={t('reports.teacher.title')}>
       {/* Print-only header */}
       <div className="hidden print:block mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Teacher Report</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('reports.teacher.printTitle')}</h1>
         {selectedStudent && (
           <p className="text-base text-gray-700 mt-1">
-            Student: {selectedStudent.full_name}
+            {t('reports.teacher.printStudent', { name: selectedStudent.full_name })}
           </p>
         )}
         <p className="text-sm text-gray-500 mt-1">
-          Generated {new Date().toLocaleDateString('en-MY', { dateStyle: 'long' })}
+          {t('reports.teacher.printGenerated', { date: new Date().toLocaleDateString('en-MY', { dateStyle: 'long' }) })}
         </p>
       </div>
 
       {/* Page title */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6 print:hidden">
-        <h2 className="font-display text-2xl font-semibold text-forest-900">Reports</h2>
-        <p className="text-gray-500 text-sm mt-0.5">Your teaching stats and student progress</p>
+        <h2 className="font-display text-2xl font-semibold text-forest-900">{t('reports.teacher.title')}</h2>
+        <p className="text-gray-500 text-sm mt-0.5">{t('reports.teacher.subtitle')}</p>
       </motion.div>
 
       {/* Filters */}
@@ -132,23 +137,23 @@ const TeacherReportsPage = () => {
       </ReportFilters>
 
       {/* ─── Section 1: Teacher own stats ─────────────────────────────────── */}
-      <SectionTitle title="My Teaching Stats" />
+      <SectionTitle title={t('reports.teacher.myStats.title')} />
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <OrgStatCard index={0} icon="📅" label="Active Sessions"    value={tStats.sessions_count}     accent="forest" />
-        <OrgStatCard index={1} icon="👥" label="Total Students"     value={tStats.total_students}      accent="blue"   />
-        <OrgStatCard index={2} icon="⏱"  label="Hours Taught"       value={tStats.total_hours_taught != null ? `${tStats.total_hours_taught}h` : null} accent="gold" />
+        <OrgStatCard index={0} icon="📅" label={t('reports.teacher.myStats.activeSessions')} value={tStats.sessions_count}     accent="forest" />
+        <OrgStatCard index={1} icon="👥" label={t('reports.teacher.myStats.totalStudents')}  value={tStats.total_students}      accent="blue"   />
+        <OrgStatCard index={2} icon="⏱"  label={t('reports.teacher.myStats.hoursTaught')}   value={tStats.total_hours_taught != null ? `${tStats.total_hours_taught}h` : null} accent="gold" />
       </div>
 
       <DistributionPieChart
         data={tr.student_progress_distribution || []}
-        title="Student Progress Distribution (by Juz Range)"
+        title={t('reports.teacher.myStats.progressDist')}
       />
 
       <Divider />
 
       {/* ─── Section 2: Student report ─────────────────────────────────────── */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <SectionTitle title="Student Report" sub="Select a student to view their full report" />
+        <SectionTitle title={t('reports.teacher.student.title')} sub={t('reports.teacher.student.sub')} />
         <div className="print:hidden">
           <select
             value={selectedId}
@@ -156,7 +161,7 @@ const TeacherReportsPage = () => {
             className="text-sm border border-gray-200 rounded-xl px-3 py-2 min-w-[200px]
                        focus:outline-none focus:ring-2 focus:ring-forest-200 bg-white"
           >
-            <option value="">— Select student —</option>
+            <option value="">{t('reports.teacher.student.selectPlaceholder')}</option>
             {students.map((s) => (
               <option key={s.id} value={s.id}>{s.full_name}</option>
             ))}
@@ -168,7 +173,7 @@ const TeacherReportsPage = () => {
         <div className="bg-gray-50 rounded-2xl border border-dashed border-gray-200 py-16
                         flex flex-col items-center justify-center text-center print:hidden">
           <span className="text-4xl mb-3">👤</span>
-          <p className="text-sm font-medium text-gray-400">Select a student above to view their report</p>
+          <p className="text-sm font-medium text-gray-400">{t('reports.teacher.student.selectPrompt')}</p>
         </div>
       )}
 
@@ -188,54 +193,54 @@ const TeacherReportsPage = () => {
                 {sr.profile?.full_name}
               </p>
               <p className="text-sm text-gray-500 capitalize mt-0.5">
-                {sr.profile?.current_level || 'No level'}{sr.profile?.age ? ` · Age ${sr.profile.age}` : ''}
+                {sr.profile?.current_level || t('reports.student.noLevel')}{sr.profile?.age ? ` · Age ${sr.profile.age}` : ''}
                 {sr.profile?.nationality ? ` · ${sr.profile.nationality}` : ''}
               </p>
             </div>
             <div className="ml-auto hidden sm:flex items-center gap-4 text-center">
               <div>
                 <p className="text-xl font-display font-semibold text-forest-900">{sStats.cert_count ?? 0}</p>
-                <p className="text-xs text-gray-400">Certificates</p>
+                <p className="text-xs text-gray-400">{t('reports.teacher.student.certCount')}</p>
               </div>
               <div className="w-px h-8 bg-gray-100" />
               <div>
                 <p className="text-xl font-display font-semibold text-forest-900">{sStats.medal_count ?? 0}</p>
-                <p className="text-xs text-gray-400">Medals</p>
+                <p className="text-xs text-gray-400">{t('reports.teacher.student.medalCount')}</p>
               </div>
             </div>
           </div>
 
           {/* Stats cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <OrgStatCard index={0} icon="✅" label="Attendance Rate"   value={sStats.attend_pct != null ? `${sStats.attend_pct}%` : null}    accent="forest" />
-            <OrgStatCard index={1} icon="❌" label="Absent Days"       value={sStats.absent_days}       accent="red"    />
-            <OrgStatCard index={2} icon="⏱"  label="Total Hours"       value={sStats.total_hours != null ? `${sStats.total_hours}h` : null}   accent="blue"   />
-            <OrgStatCard index={3} icon="📖" label="Juz Memorized"     value={sStats.total_juz}         accent="gold"   />
+            <OrgStatCard index={0} icon="✅" label={t('reports.teacher.student.attendRate')}   value={sStats.attend_pct != null ? `${sStats.attend_pct}%` : null}    accent="forest" />
+            <OrgStatCard index={1} icon="❌" label={t('reports.teacher.student.absentDays')}   value={sStats.absent_days}       accent="red"    />
+            <OrgStatCard index={2} icon="⏱"  label={t('reports.teacher.student.totalHours')}  value={sStats.total_hours != null ? `${sStats.total_hours}h` : null}   accent="blue"   />
+            <OrgStatCard index={3} icon="📖" label={t('reports.teacher.student.juzMemorized')} value={sStats.total_juz}         accent="gold"   />
           </div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <AttendanceBarChart data={sr.attendance_trend || []} title="Attendance (Last 12 Weeks)" />
-            <ScoreLineChart     data={sr.assessment_trend || []} title="Assessment Score Trend"     />
+            <AttendanceBarChart data={sr.attendance_trend || []} title={t('reports.teacher.student.attendChart')} />
+            <ScoreLineChart     data={sr.assessment_trend || []} title={t('reports.teacher.student.scoreChart')}  />
           </div>
 
           <Divider />
 
           {/* ─── Certificates ─────────────────────────────────────────────── */}
           <div className="flex items-center justify-between mb-4">
-            <SectionTitle title="Certificates" />
+            <SectionTitle title={t('reports.teacher.student.certTitle')} />
             <button
               onClick={() => setIssueCertOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl
                          bg-forest-600 text-white text-xs font-medium
                          hover:bg-forest-700 transition-colors print:hidden"
             >
-              + Issue Certificate
+              {t('reports.teacher.student.issueCert')}
             </button>
           </div>
 
           {certificates.length === 0 ? (
-            <p className="text-sm text-gray-400 mb-6">No certificates issued yet.</p>
+            <p className="text-sm text-gray-400 mb-6">{t('reports.teacher.student.noCerts')}</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
               {certificates.map((c) => <CertificateCard key={c.id} cert={c} />)}
@@ -246,19 +251,19 @@ const TeacherReportsPage = () => {
 
           {/* ─── Medals ───────────────────────────────────────────────────── */}
           <div className="flex items-center justify-between mb-4">
-            <SectionTitle title="Medals & Achievements" />
+            <SectionTitle title={t('reports.teacher.student.medalTitle')} />
             <button
               onClick={() => setAwardMedalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-xl
                          bg-gold-500 text-white text-xs font-medium
                          hover:bg-gold-600 transition-colors print:hidden"
             >
-              + Award Medal
+              {t('reports.teacher.student.awardMedal')}
             </button>
           </div>
 
           {achievements.length === 0 ? (
-            <p className="text-sm text-gray-400">No medals awarded yet.</p>
+            <p className="text-sm text-gray-400">{t('reports.teacher.student.noMedals')}</p>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {achievements.map((a) => <MedalBadge key={a.id} achievement={a} />)}

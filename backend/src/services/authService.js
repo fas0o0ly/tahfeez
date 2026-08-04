@@ -196,39 +196,81 @@ const login = async (email, password, ipAddress, userAgent) => {
 // ─── Refresh Token ─────────────────────────────────────────────────────────
 
 const refreshAccessToken = async (rawRefreshToken) => {
-  let decoded;
   try {
-    decoded = jwt.verify(rawRefreshToken, process.env.JWT_REFRESH_SECRET);
+    jwt.verify(rawRefreshToken, process.env.JWT_REFRESH_SECRET);
   } catch {
     throw new AppError('Invalid or expired refresh token', 401);
   }
 
   const tokenHash = hashToken(rawRefreshToken);
+  const client = await getClient();
 
-  const result = await query(
-    `SELECT rt.id, rt.is_revoked, rt.expires_at, u.id as user_id, u.role, u.status
-     FROM refresh_tokens rt
-     JOIN users u ON u.id = rt.user_id
-     WHERE rt.token_hash = $1`,
-    [tokenHash]
-  );
+  try {
+    await client.query('BEGIN');
 
-  const record = result.rows[0];
+    const result = await client.query(
+      `SELECT rt.id, rt.is_revoked, rt.expires_at, rt.ip_address, rt.user_agent,
+              u.id as user_id, u.role, u.status
+       FROM refresh_tokens rt
+       JOIN users u ON u.id = rt.user_id
+       WHERE rt.token_hash = $1`,
+      [tokenHash]
+    );
 
-  if (!record || record.is_revoked) {
-    throw new AppError('Refresh token is invalid or revoked', 401);
+    const record = result.rows[0];
+
+    if (!record) {
+      await client.query('ROLLBACK');
+      throw new AppError('Refresh token not found', 401);
+    }
+
+    // Token reuse detection: a revoked token being presented again means it may have been stolen.
+    // Revoke all tokens for this user to force a full re-login.
+    if (record.is_revoked) {
+      await client.query(
+        'UPDATE refresh_tokens SET is_revoked = TRUE WHERE user_id = $1',
+        [record.user_id]
+      );
+      await client.query('COMMIT');
+      throw new AppError('Session invalidated. Please log in again.', 401);
+    }
+
+    if (new Date(record.expires_at) < new Date()) {
+      await client.query('ROLLBACK');
+      throw new AppError('Refresh token expired', 401);
+    }
+
+    if (record.status !== 'active') {
+      await client.query('ROLLBACK');
+      throw new AppError(`Account is ${record.status}`, 403);
+    }
+
+    // Rotate: revoke the old token and issue a fresh one
+    await client.query(
+      'UPDATE refresh_tokens SET is_revoked = TRUE WHERE id = $1',
+      [record.id]
+    );
+
+    const newRefreshToken = generateRefreshToken(record.user_id);
+    const newRefreshHash = hashToken(newRefreshToken);
+    const newExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    await client.query(
+      `INSERT INTO refresh_tokens (user_id, token_hash, expires_at, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [record.user_id, newRefreshHash, newExpiry, record.ip_address, record.user_agent]
+    );
+
+    const newAccessToken = generateAccessToken(record.user_id, record.role);
+
+    await client.query('COMMIT');
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  } catch (err) {
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    throw err;
+  } finally {
+    client.release();
   }
-
-  if (new Date(record.expires_at) < new Date()) {
-    throw new AppError('Refresh token expired', 401);
-  }
-
-  if (record.status !== 'active') {
-    throw new AppError(`Account is ${record.status}`, 403);
-  }
-
-  const newAccessToken = generateAccessToken(record.user_id, record.role);
-  return { accessToken: newAccessToken };
 };
 
 // ─── Logout ────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useSessions } from '../../hooks/useSessions';
 import { sessionApi } from '../../api/sessionApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -16,7 +17,9 @@ const STATUSES  = ['draft','scheduled','live','completed','cancelled'];
 const LANGUAGES = ['arabic','english','malay','urdu','french','other'];
 const GENDERS   = ['male','female'];
 
-const FilterBar = ({ filters, onChange }) => (
+const FilterBar = ({ filters, onChange }) => {
+  const { t } = useTranslation();
+  return (
   <div className="flex flex-wrap gap-2">
     {/* Type */}
     <select
@@ -25,7 +28,7 @@ const FilterBar = ({ filters, onChange }) => (
       className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white
                  focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-700"
     >
-      <option value="">All types</option>
+      <option value="">{t('sessions.filter.allTypes')}</option>
       {TYPES.map((t) => (
         <option key={t} value={t}>{t.replace('_', ' ')}</option>
       ))}
@@ -38,7 +41,7 @@ const FilterBar = ({ filters, onChange }) => (
       className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white
                  focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-700"
     >
-      <option value="">All statuses</option>
+      <option value="">{t('sessions.filter.allStatuses')}</option>
       {STATUSES.map((s) => (
         <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
       ))}
@@ -51,7 +54,7 @@ const FilterBar = ({ filters, onChange }) => (
       className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white
                  focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-700"
     >
-      <option value="">All languages</option>
+      <option value="">{t('sessions.filter.allLanguages')}</option>
       {LANGUAGES.map((l) => (
         <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>
       ))}
@@ -64,15 +67,17 @@ const FilterBar = ({ filters, onChange }) => (
       className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white
                  focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-700"
     >
-      <option value="">All genders</option>
+      <option value="">{t('sessions.filter.allGenders')}</option>
       {GENDERS.map((g) => (
-        <option key={g} value={g}>{g.charAt(0).toUpperCase() + g.slice(1)}</option>
+        <option key={g} value={g}>{t(`common.gender.${g}`)}</option>
       ))}
     </select>
   </div>
-);
+  );
+};
 
 const SessionsPage = () => {
+  const { t } = useTranslation();
   const { sessions, pagination, loading, error, filters, updateFilter, setPage, refetch } = useSessions();
   const [actionLoading, setActionLoading] = useState(null);
   const [teacherModalSessionId, setTeacherModalSessionId] = useState(null);
@@ -81,7 +86,7 @@ const SessionsPage = () => {
     setActionLoading(id);
     try {
       await sessionApi.updateStatus(id, 'cancelled');
-      toast.success('Session cancelled');
+      toast.success(t('sessions.cancelSuccess'));
       refetch();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to cancel session');
@@ -100,13 +105,13 @@ const SessionsPage = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="font-display text-2xl font-semibold text-forest-900">Sessions</h2>
+            <h2 className="font-display text-2xl font-semibold text-forest-900">{t('sessions.title')}</h2>
             <p className="text-gray-500 text-sm mt-0.5">
-              {pagination ? `${pagination.total} total sessions` : 'Loading...'}
+              {pagination ? t('sessions.totalCount', { count: pagination.total }) : t('sessions.loading')}
             </p>
           </div>
           <Link to="/admin/sessions/create">
-            <Button variant="primary" size="md">+ New Session</Button>
+            <Button variant="primary" size="md">{t('sessions.newSession')}</Button>
           </Link>
         </div>
 
@@ -119,15 +124,15 @@ const SessionsPage = () => {
         {loading ? (
           <div className="flex justify-center py-20"><Spinner size="lg" /></div>
         ) : error ? (
-          <EmptyState icon="⚠️" title="Failed to load sessions" description={error} />
+          <EmptyState icon="⚠️" title={t('sessions.error')} description={error} />
         ) : sessions.length === 0 ? (
           <EmptyState
             icon="📅"
-            title="No sessions found"
-            description="Create your first session to get started"
+            title={t('sessions.notFound.title')}
+            description={t('sessions.notFound.desc')}
             action={
               <Link to="/admin/sessions/create">
-                <Button variant="primary" size="sm">Create Session</Button>
+                <Button variant="primary" size="sm">{t('sessions.createSession')}</Button>
               </Link>
             }
           />
@@ -150,7 +155,7 @@ const SessionsPage = () => {
                         onClick={() => handleCancel(session.id)}
                         className="text-red-500 hover:text-red-600 hover:bg-red-50"
                       >
-                        Cancel
+                        {t('sessions.cancel')}
                       </Button>
                     )
                   }

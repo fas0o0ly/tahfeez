@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { sessionApi } from '../../api/sessionApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Badge from '../../components/common/Badge';
@@ -15,18 +16,22 @@ const statusVariant = {
   completed: 'info', cancelled: 'error',
 };
 
-const InfoRow = ({ label, value }) => (
-  <div className="flex justify-between items-start py-2.5 border-b border-gray-50 last:border-0">
-    <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-36 flex-shrink-0">
-      {label}
-    </span>
-    <span className="text-sm text-gray-700 text-right flex-1">
-      {value ?? <span className="text-gray-300 italic">Not set</span>}
-    </span>
-  </div>
-);
+const InfoRow = ({ label, value }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex justify-between items-start py-2.5 border-b border-gray-50 last:border-0">
+      <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-36 flex-shrink-0">
+        {label}
+      </span>
+      <span className="text-sm text-gray-700 text-right flex-1">
+        {value ?? <span className="text-gray-300 italic">{t('sessionDetail.notSet')}</span>}
+      </span>
+    </div>
+  );
+};
 
 const StudentSessionDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
@@ -39,7 +44,6 @@ const StudentSessionDetailPage = () => {
       const { data } = await sessionApi.getSessionById(id);
       setSession(data.data.session);
 
-      // Load teacher profile if student is enrolled
       if (data.data.session.my_enrollment_status === 'approved') {
         try {
           const teacherRes = await sessionApi.getSessionTeacherProfile(id);
@@ -47,7 +51,7 @@ const StudentSessionDetailPage = () => {
         } catch { /* not enrolled or no teacher */ }
       }
     } catch (err) {
-      toast.error('Session not found');
+      toast.error(t('sessionDetail.notFound'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +63,7 @@ const StudentSessionDetailPage = () => {
     setActionLoading('enroll');
     try {
       await sessionApi.enroll(id);
-      toast.success('Enrollment request sent — awaiting teacher approval');
+      toast.success(t('sessionDetail.student.enrollSuccess'));
       load();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Enrollment failed');
@@ -70,7 +74,7 @@ const StudentSessionDetailPage = () => {
     setActionLoading('withdraw');
     try {
       await sessionApi.withdraw(id);
-      toast.success('You have withdrawn from this session');
+      toast.success(t('sessionDetail.student.withdrawSuccess'));
       load();
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Withdrawal failed');
@@ -79,7 +83,7 @@ const StudentSessionDetailPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Session Detail">
+      <DashboardLayout title={t('sessionDetail.details.title')}>
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
       </DashboardLayout>
     );
@@ -87,8 +91,8 @@ const StudentSessionDetailPage = () => {
 
   if (!session) {
     return (
-      <DashboardLayout title="Session Detail">
-        <EmptyState icon="📅" title="Session not found" />
+      <DashboardLayout title={t('sessionDetail.details.title')}>
+        <EmptyState icon="📅" title={t('sessionDetail.notFound')} />
       </DashboardLayout>
     );
   }
@@ -98,7 +102,7 @@ const StudentSessionDetailPage = () => {
   const isFull           = enrolledCount >= session.max_students;
 
   return (
-    <DashboardLayout title="Session Detail">
+    <DashboardLayout title={t('sessionDetail.details.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -113,7 +117,7 @@ const StudentSessionDetailPage = () => {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Sessions
+          {t('sessionDetail.back')}
         </Link>
 
         {/* Header */}
@@ -137,7 +141,7 @@ const StudentSessionDetailPage = () => {
             <div className="flex-shrink-0">
               {enrollmentStatus === 'approved' && (
                 <div className="flex flex-col items-end gap-2">
-                  <Badge variant="success">✓ You are enrolled</Badge>
+                  <Badge variant="success">{t('sessionDetail.student.enrolled')}</Badge>
                   {session.status === 'live' ? (
                     <button
                       onClick={() => navigate(`/sessions/${id}/live`)}
@@ -146,16 +150,16 @@ const StudentSessionDetailPage = () => {
                                  transition-colors shadow-sm animate-pulse"
                     >
                       <span className="w-2 h-2 rounded-full bg-white" />
-                      Join Live Session
+                      {t('sessionDetail.student.joinLive')}
                     </button>
                   ) : (
-                    <p className="text-xs text-gray-400">Waiting for session to start</p>
+                    <p className="text-xs text-gray-400">{t('sessionDetail.student.waitingToStart')}</p>
                   )}
                 </div>
               )}
               {enrollmentStatus === 'pending' && (
                 <div className="flex flex-col items-end gap-2">
-                  <Badge variant="pending">Request pending</Badge>
+                  <Badge variant="pending">{t('sessionDetail.student.requestPending')}</Badge>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -163,18 +167,18 @@ const StudentSessionDetailPage = () => {
                     onClick={handleWithdraw}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
                   >
-                    Withdraw request
+                    {t('sessionDetail.student.withdrawRequest')}
                   </Button>
                 </div>
               )}
               {enrollmentStatus === 'rejected' && (
-                <Badge variant="error">Enrollment rejected</Badge>
+                <Badge variant="error">{t('sessionDetail.student.enrollRejected')}</Badge>
               )}
               {!enrollmentStatus && (
                 isFull
-                  ? <Badge variant="error">Session is full</Badge>
+                  ? <Badge variant="error">{t('sessionDetail.student.sessionFull')}</Badge>
                   : !session.teacher_id
-                  ? <span className="text-xs text-gray-400">No teacher assigned yet</span>
+                  ? <span className="text-xs text-gray-400">{t('sessionDetail.student.noTeacherAssigned')}</span>
                   : (
                     <Button
                       variant="primary"
@@ -182,7 +186,7 @@ const StudentSessionDetailPage = () => {
                       loading={actionLoading === 'enroll'}
                       onClick={handleEnroll}
                     >
-                      Request to Join
+                      {t('sessionDetail.student.requestToJoin')}
                     </Button>
                   )
               )}
@@ -193,23 +197,26 @@ const StudentSessionDetailPage = () => {
         {/* Session info */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-5">
           <h3 className="font-display font-semibold text-forest-900 mb-4 pb-3 border-b border-gray-100">
-            Session Information
+            {t('sessionDetail.student.sessionInfo')}
           </h3>
-          <InfoRow label="Type" value={session.session_type?.replace('_', ' ')} />
-          <InfoRow label="Language" value={session.session_language} />
-          <InfoRow label="Gender" value={session.session_gender} />
+          <InfoRow label={t('sessionDetail.student.infoType')}     value={session.session_type?.replace('_', ' ')} />
+          <InfoRow label={t('sessionDetail.student.infoLanguage')} value={session.session_language} />
+          <InfoRow label={t('sessionDetail.student.infoGender')}   value={session.session_gender} />
           <InfoRow
-            label="Age Range"
+            label={t('sessionDetail.student.infoAgeRange')}
             value={
               session.age_range_min || session.age_range_max
-                ? `${session.age_range_min ?? '?'} – ${session.age_range_max ?? '?'} years`
-                : 'All ages'
+                ? t('sessionDetail.student.infoAgeYears', { min: session.age_range_min ?? '?', max: session.age_range_max ?? '?' })
+                : t('sessionDetail.student.infoAllAges')
             }
           />
-          <InfoRow label="Duration" value={`${session.duration_minutes} minutes`} />
-          <InfoRow label="Capacity" value={`${enrolledCount} / ${session.max_students} students`} />
+          <InfoRow label={t('sessionDetail.student.infoType')}     value={t('sessionDetail.student.infoDuration', { count: session.duration_minutes })} />
           <InfoRow
-            label="Schedule"
+            label={t('sessionDetail.student.infoCapacity') && 'Capacity'}
+            value={t('sessionDetail.student.infoCapacity', { enrolled: enrolledCount, max: session.max_students })}
+          />
+          <InfoRow
+            label={t('sessionDetail.student.infoSchedule')}
             value={new Date(session.scheduled_at).toLocaleString('en-MY', {
               weekday: 'long', day: 'numeric', month: 'long',
               year: 'numeric', hour: '2-digit', minute: '2-digit',
@@ -217,7 +224,7 @@ const StudentSessionDetailPage = () => {
           />
           {session.session_days?.length > 0 && (
             <InfoRow
-              label="Recurring"
+              label={t('sessionDetail.student.infoRecurring')}
               value={session.session_days
                 .map((d) => d.charAt(0).toUpperCase() + d.slice(1))
                 .join(', ')}
@@ -228,7 +235,7 @@ const StudentSessionDetailPage = () => {
         {/* Teacher info */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-5">
           <h3 className="font-display font-semibold text-forest-900 mb-4 pb-3 border-b border-gray-100">
-            Teacher
+            {t('sessionDetail.student.teacherSection')}
           </h3>
           {session.teacher_name ? (
             <div>
@@ -247,14 +254,16 @@ const StudentSessionDetailPage = () => {
                 <div className="border-t border-gray-100 pt-4 space-y-3">
                   {teacher.bio && (
                     <div>
-                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Bio</p>
+                      <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
+                        {t('sessionDetail.student.teacherBio')}
+                      </p>
                       <p className="text-sm text-gray-600 leading-relaxed">{teacher.bio}</p>
                     </div>
                   )}
                   {teacher.specializations?.length > 0 && (
                     <div>
                       <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-                        Specializations
+                        {t('sessionDetail.student.teacherSpecializations')}
                       </p>
                       <div className="flex flex-wrap gap-1.5">
                         {teacher.specializations.map((s) => (
@@ -265,7 +274,7 @@ const StudentSessionDetailPage = () => {
                   )}
                   {teacher.years_experience && (
                     <p className="text-sm text-gray-500">
-                      {teacher.years_experience} years of teaching experience
+                      {t('sessionDetail.student.teacherYearsExp', { count: teacher.years_experience })}
                     </p>
                   )}
                 </div>
@@ -273,17 +282,17 @@ const StudentSessionDetailPage = () => {
 
               {enrollmentStatus && enrollmentStatus !== 'approved' && (
                 <p className="text-xs text-gray-400 mt-3 italic">
-                  Full teacher profile visible after enrollment approval
+                  {t('sessionDetail.student.profileAfterApproval')}
                 </p>
               )}
               {!enrollmentStatus && (
                 <p className="text-xs text-gray-400 mt-3 italic">
-                  Enroll to view full teacher profile
+                  {t('sessionDetail.student.enrollToView')}
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-400 italic">No teacher assigned yet</p>
+            <p className="text-sm text-gray-400 italic">{t('sessionDetail.student.noTeacherAssigned')}</p>
           )}
         </div>
       </motion.div>

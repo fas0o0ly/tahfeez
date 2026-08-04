@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import { attendanceApi } from '../../api/attendanceApi';
@@ -10,57 +11,13 @@ import Avatar from '../../components/common/Avatar';
 import Badge from '../../components/common/Badge';
 import { Spinner } from '../../components/common/EmptyState';
 
-const statusLabel = {
-  not_started:    'Not Started',
-  in_progress:    'In Progress',
-  needs_revision: 'Needs Revision',
-  completed:      'Completed',
-  certified:      'Certified',
-};
-
-const ACTIONS = [
-  {
-    icon: '📅',
-    label: 'My Sessions',
-    desc: 'View your enrolled Halaqah sessions',
-    to: '/student/sessions',
-    accent: 'forest',
-  },
-  {
-    icon: '🎤',
-    label: 'New Assessment',
-    desc: 'Start an AI recitation assessment',
-    to: '/student/assessments/new',
-    accent: 'gold',
-  },
-  {
-    icon: '📊',
-    label: 'My Report',
-    desc: 'View progress, certificates & medals',
-    to: '/student/reports',
-    accent: 'forest',
-  },
-  {
-    icon: '📖',
-    label: 'Quran Reader',
-    desc: 'Read and study the Holy Quran',
-    to: '/student/quran/read',
-    accent: 'teal',
-  },
-  {
-    icon: '💬',
-    label: 'Messages',
-    desc: 'Send a message to your teacher',
-    to: '/student/messages',
-    accent: 'blue',
-  },
-  {
-    icon: '📈',
-    label: 'My Progress',
-    desc: 'Attendance & memorization history',
-    to: '/student/progress',
-    accent: 'gray',
-  },
+const ACTION_DEFS = [
+  { icon: '📅', labelKey: 'dashboard.student.actions.sessions.label',   descKey: 'dashboard.student.actions.sessions.desc',   to: '/student/sessions',       accent: 'forest' },
+  { icon: '🎤', labelKey: 'dashboard.student.actions.assessment.label', descKey: 'dashboard.student.actions.assessment.desc', to: '/student/assessments/new', accent: 'gold'   },
+  { icon: '📊', labelKey: 'dashboard.student.actions.report.label',     descKey: 'dashboard.student.actions.report.desc',     to: '/student/reports',        accent: 'forest' },
+  { icon: '📖', labelKey: 'dashboard.student.actions.quran.label',      descKey: 'dashboard.student.actions.quran.desc',      to: '/student/quran/read',     accent: 'teal'   },
+  { icon: '💬', labelKey: 'dashboard.student.actions.messages.label',   descKey: 'dashboard.student.actions.messages.desc',   to: '/student/messages',       accent: 'blue'   },
+  { icon: '📈', labelKey: 'dashboard.student.actions.progress.label',   descKey: 'dashboard.student.actions.progress.desc',   to: '/student/progress',       accent: 'gray'   },
 ];
 
 const accentHover = {
@@ -80,6 +37,7 @@ const accentIcon = {
 };
 
 const StudentDashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { profile, loading: profileLoading } = useProfile();
 
@@ -125,6 +83,15 @@ const StudentDashboard = () => {
     advanced:     'gold',
   };
 
+  const ACTIONS = ACTION_DEFS.map((a) => ({ ...a, label: t(a.labelKey), desc: t(a.descKey) }));
+  const statusLabel = {
+    not_started:    t('progress.status.not_started'),
+    in_progress:    t('progress.status.in_progress'),
+    needs_revision: t('progress.status.needs_revision'),
+    completed:      t('progress.status.completed'),
+    certified:      t('progress.status.certified'),
+  };
+
   const loading = profileLoading || progressLoading;
 
   return (
@@ -150,10 +117,10 @@ const StudentDashboard = () => {
           <div className="relative z-10 flex items-center gap-4">
             <Avatar src={user?.avatar_url} name={user?.full_name} size="lg" />
             <div>
-              <p className="text-teal-300 text-sm mb-0.5">As-salamu alaykum</p>
+              <p className="text-teal-300 text-sm mb-0.5">{t('dashboard.student.greeting')}</p>
               <h2 className="font-display text-2xl font-semibold text-white">{user?.full_name}</h2>
               <div className="flex items-center gap-2 mt-1.5">
-                <Badge variant="student">Student</Badge>
+                <Badge variant="student">{t('dashboard.student.badge.student')}</Badge>
                 {profile?.current_level && (
                   <Badge variant={levelColors[profile.current_level] || 'info'}>
                     {profile.current_level.charAt(0).toUpperCase() + profile.current_level.slice(1)}
@@ -169,19 +136,19 @@ const StudentDashboard = () => {
           <div className="grid grid-cols-3 gap-3 mb-6">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-4 text-center">
               <p className="text-2xl font-display font-semibold text-forest-700">{juzMemorized}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Juz memorized</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t('dashboard.student.stats.juzMemorized')}</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-4 text-center">
               <p className="text-2xl font-display font-semibold text-forest-700">
                 {attendSummary?.rate_pct != null ? `${attendSummary.rate_pct}%` : '—'}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">Attendance rate</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t('dashboard.student.stats.attendanceRate')}</p>
             </div>
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-4 text-center">
               <p className="text-sm font-semibold text-forest-700 leading-tight mt-1">
-                {statusLabel[progress?.status] ?? 'Not started'}
+                {statusLabel[progress?.status] ?? t('progress.status.not_started')}
               </p>
-              <p className="text-xs text-gray-400 mt-0.5">Progress status</p>
+              <p className="text-xs text-gray-400 mt-0.5">{t('dashboard.student.stats.progressStatus')}</p>
             </div>
           </div>
         )}
@@ -195,7 +162,7 @@ const StudentDashboard = () => {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
               </span>
               <h3 className="font-display font-semibold text-forest-900 text-sm">
-                Live Now — {liveSessions.length} session{liveSessions.length > 1 ? 's' : ''} in progress
+                {t('dashboard.student.liveNow')} — {liveSessions.length} session{liveSessions.length > 1 ? 's' : ''} in progress
               </h3>
             </div>
             <div className="space-y-3">
@@ -209,7 +176,7 @@ const StudentDashboard = () => {
                   <div className="min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{s.title}</p>
                     <p className="text-xs text-gray-500 mt-0.5">
-                      {s.teacher_name ? `Teacher: ${s.teacher_name} · ` : ''}
+                      {s.teacher_name ? `${t('dashboard.student.teacher')} ${s.teacher_name} · ` : ''}
                       {s.session_type?.replace('_', '-')} · {s.session_language}
                     </p>
                   </div>
@@ -221,7 +188,7 @@ const StudentDashboard = () => {
                         <path strokeLinecap="round" strokeLinejoin="round"
                           d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
-                      Join Now
+                      {t('dashboard.student.joinNow')}
                     </button>
                   </Link>
                 </div>
@@ -237,15 +204,15 @@ const StudentDashboard = () => {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-display font-semibold text-forest-900">Hifz Progress</h3>
-                <p className="text-xs text-gray-400 mt-0.5">Your Quran memorization journey</p>
+                <h3 className="font-display font-semibold text-forest-900">{t('dashboard.student.hifzProgress.title')}</h3>
+                <p className="text-xs text-gray-400 mt-0.5">{t('dashboard.student.hifzProgress.subtitle')}</p>
               </div>
               <div className="text-right">
                 <p className="text-2xl font-display font-semibold text-forest-600">
                   {juzMemorized}
                   <span className="text-sm text-gray-400 font-body font-normal"> / 30</span>
                 </p>
-                <p className="text-xs text-gray-400">Juz memorized</p>
+                <p className="text-xs text-gray-400">{t('dashboard.student.hifzProgress.juzMemorized')}</p>
               </div>
             </div>
             <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden mb-3">
@@ -257,28 +224,27 @@ const StudentDashboard = () => {
               />
             </div>
             <div className="flex justify-between text-xs text-gray-400 mb-5">
-              <span>Start</span>
-              <span>15 Juz</span>
-              <span>Complete ✓</span>
+              <span>{t('dashboard.student.hifzProgress.start')}</span>
+              <span>{t('dashboard.student.hifzProgress.halfway')}</span>
+              <span>{t('dashboard.student.hifzProgress.complete')}</span>
             </div>
             {juzMemorized === 0 && (
               <div className="bg-forest-50 border border-forest-100 rounded-xl px-4 py-3">
                 <p className="text-sm text-forest-700 leading-relaxed">
-                  Your progress will be updated by your teacher after each session.
-                  Join a Halaqah to begin your journey!
+                  {t('dashboard.student.hifzProgress.notStarted')}
                 </p>
               </div>
             )}
             {juzMemorized > 0 && juzMemorized < 30 && (
               <div className="bg-forest-50 border border-forest-100 rounded-xl px-4 py-3">
                 <p className="text-sm text-forest-700">
-                  MashaAllah! {30 - juzMemorized} Juz remaining. Keep up the excellent work!
+                  {t('dashboard.student.hifzProgress.inProgress', { count: 30 - juzMemorized })}
                 </p>
               </div>
             )}
             {juzMemorized >= 30 && (
               <div className="bg-gold-50 border border-gold-200 rounded-xl px-4 py-3 text-center">
-                <p className="text-gold-700 font-semibold">Alhamdulillah — Hafiz Al-Quran!</p>
+                <p className="text-gold-700 font-semibold">{t('dashboard.student.hifzProgress.completed')}</p>
               </div>
             )}
           </div>
@@ -286,8 +252,8 @@ const StudentDashboard = () => {
 
         {/* ─── Quick Actions ─────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
-          <h3 className="font-display font-semibold text-forest-900 mb-1">Quick Actions</h3>
-          <p className="text-xs text-gray-400 mb-4">Jump to your most-used features</p>
+          <h3 className="font-display font-semibold text-forest-900 mb-1">{t('dashboard.student.quickActions.title')}</h3>
+          <p className="text-xs text-gray-400 mb-4">{t('dashboard.student.quickActions.subtitle')}</p>
           <div className="grid sm:grid-cols-2 gap-3">
             {ACTIONS.map((action, i) => (
               <motion.div

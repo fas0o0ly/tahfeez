@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { userApi } from '../../api/userApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Badge from '../../components/common/Badge';
@@ -43,6 +44,7 @@ const StatCard = ({ label, value, sub, icon, delay = 0, accent = 'green' }) => {
 };
 
 const AdminDashboard = () => {
+  const { t } = useTranslation();
   const [stats, setStats] = useState(null);
   const [pendingTeachers, setPendingTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,39 +77,39 @@ const AdminDashboard = () => {
         className="mb-6"
       >
         <h2 className="font-display text-2xl font-semibold text-forest-900">
-          Overview
+          {t('dashboard.admin.title')}
         </h2>
         <p className="text-gray-500 text-sm mt-0.5">
-          Platform summary and pending actions
+          {t('dashboard.admin.subtitle')}
         </p>
       </motion.div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          label="Total Users"
+          label={t('dashboard.admin.stats.totalUsers')}
           value={stats?.total_users}
-          sub={`+${stats?.new_this_week ?? '—'} this week`}
+          sub={t('dashboard.admin.stats.newThisWeek', { count: stats?.new_this_week ?? '—' })}
           icon="👥"
           accent="green"
           delay={0}
         />
         <StatCard
-          label="Students"
+          label={t('dashboard.admin.stats.students')}
           value={stats?.total_students}
           icon="📖"
           accent="blue"
           delay={0.05}
         />
         <StatCard
-          label="Teachers"
+          label={t('dashboard.admin.stats.teachers')}
           value={stats?.total_teachers}
           icon="🎓"
           accent="purple"
           delay={0.1}
         />
         <StatCard
-          label="Pending Approvals"
+          label={t('dashboard.admin.stats.pendingApprovals')}
           value={stats?.pending_teachers}
           icon="⏳"
           accent="amber"
@@ -118,28 +120,28 @@ const AdminDashboard = () => {
       {/* Second row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          label="Active Users"
+          label={t('dashboard.admin.stats.activeUsers')}
           value={stats?.active_users}
           icon="✅"
           accent="green"
           delay={0.2}
         />
         <StatCard
-          label="Suspended"
+          label={t('dashboard.admin.stats.suspended')}
           value={stats?.suspended_users}
           icon="⚠️"
           accent="amber"
           delay={0.25}
         />
         <StatCard
-          label="Banned"
+          label={t('dashboard.admin.stats.banned')}
           value={stats?.banned_users}
           icon="🚫"
           accent="red"
           delay={0.3}
         />
         <StatCard
-          label="New This Month"
+          label={t('dashboard.admin.stats.newThisMonth')}
           value={stats?.new_this_month}
           icon="📈"
           accent="gold"
@@ -157,10 +159,10 @@ const AdminDashboard = () => {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div>
             <h3 className="font-display font-semibold text-forest-900">
-              Pending Teacher Approvals
+              {t('dashboard.admin.pending.title')}
             </h3>
             <p className="text-xs text-gray-400 mt-0.5">
-              Teachers waiting for account activation
+              {t('dashboard.admin.pending.subtitle')}
             </p>
           </div>
           <Link
@@ -168,7 +170,7 @@ const AdminDashboard = () => {
             className="text-xs text-forest-600 hover:text-forest-800
                        font-medium transition-colors"
           >
-            View all →
+            {t('dashboard.admin.pending.viewAll')}
           </Link>
         </div>
 
@@ -179,7 +181,7 @@ const AdminDashboard = () => {
         ) : pendingTeachers.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-2xl mb-2">🎉</p>
-            <p className="text-sm text-gray-500">No pending approvals</p>
+            <p className="text-sm text-gray-500">{t('dashboard.admin.pending.empty')}</p>
           </div>
         ) : (
           <ul className="divide-y divide-gray-50">
@@ -204,7 +206,7 @@ const AdminDashboard = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <Badge variant="pending">Pending</Badge>
+                    <Badge variant="pending">{t('common.status.pending')}</Badge>
                     <svg
                       className="w-4 h-4 text-gray-300"
                       fill="none"

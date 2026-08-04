@@ -61,7 +61,8 @@ const refreshToken = async (req, res) => {
     return res.status(401).json({ success: false, message: 'Refresh token not found' });
   }
 
-  const { accessToken } = await authService.refreshAccessToken(rawRefreshToken);
+  const { accessToken, refreshToken: newRefreshToken } = await authService.refreshAccessToken(rawRefreshToken);
+  res.cookie('refreshToken', newRefreshToken, COOKIE_OPTIONS);
   return success(res, { accessToken }, 'Token refreshed');
 };
 

@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { sessionApi } from '../../api/sessionApi';
 import { userApi } from '../../api/userApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -21,16 +22,19 @@ const statusVariant = {
   completed: 'info', cancelled: 'error',
 };
 
-const InfoRow = ({ label, value }) => (
-  <div className="flex justify-between items-start py-2.5 border-b border-gray-50 last:border-0">
-    <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-36 flex-shrink-0">
-      {label}
-    </span>
-    <span className="text-sm text-gray-700 text-right flex-1">
-      {value ?? <span className="text-gray-300 italic">Not set</span>}
-    </span>
-  </div>
-);
+const InfoRow = ({ label, value }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex justify-between items-start py-2.5 border-b border-gray-50 last:border-0">
+      <span className="text-xs font-medium text-gray-400 uppercase tracking-wide w-36 flex-shrink-0">
+        {label}
+      </span>
+      <span className="text-sm text-gray-700 text-right flex-1">
+        {value ?? <span className="text-gray-300 italic">{t('sessionDetail.notSet')}</span>}
+      </span>
+    </div>
+  );
+};
 
 const SelectField = ({ label, name, value, onChange, disabled, children }) => (
   <div className="flex flex-col gap-1.5">
@@ -53,16 +57,16 @@ const SelectField = ({ label, name, value, onChange, disabled, children }) => (
 
 const STATUS_OPTIONS = {
   admin: [
-    { value: 'scheduled', label: 'Scheduled', desc: 'Mark as scheduled and ready',     color: 'amber' },
-    { value: 'live',      label: 'Live',       desc: 'Set session as live/in-progress', color: 'green' },
-    { value: 'completed', label: 'Completed',  desc: 'Mark session as done',            color: 'blue'  },
-    { value: 'cancelled', label: 'Cancelled',  desc: 'Cancel this session',             color: 'red'   },
+    { value: 'scheduled', labelKey: 'sessionDetail.statusModal.admin.scheduled.label', descKey: 'sessionDetail.statusModal.admin.scheduled.desc', color: 'amber' },
+    { value: 'live',      labelKey: 'sessionDetail.statusModal.admin.live.label',      descKey: 'sessionDetail.statusModal.admin.live.desc',      color: 'green' },
+    { value: 'completed', labelKey: 'sessionDetail.statusModal.admin.completed.label', descKey: 'sessionDetail.statusModal.admin.completed.desc', color: 'blue'  },
+    { value: 'cancelled', labelKey: 'sessionDetail.statusModal.admin.cancelled.label', descKey: 'sessionDetail.statusModal.admin.cancelled.desc', color: 'red'   },
   ],
   teacher: [
-    { value: 'scheduled', label: 'Scheduled',     desc: 'Move back to scheduled',          color: 'amber' },
-    { value: 'live',      label: 'Start Session',  desc: 'Open the session for students',   color: 'green' },
-    { value: 'completed', label: 'End Session',    desc: 'Mark session as completed',       color: 'blue'  },
-    { value: 'cancelled', label: 'Cancel Session', desc: 'Cancel this session',             color: 'red'   },
+    { value: 'scheduled', labelKey: 'sessionDetail.statusModal.teacher.scheduled.label', descKey: 'sessionDetail.statusModal.teacher.scheduled.desc', color: 'amber' },
+    { value: 'live',      labelKey: 'sessionDetail.statusModal.teacher.live.label',      descKey: 'sessionDetail.statusModal.teacher.live.desc',      color: 'green' },
+    { value: 'completed', labelKey: 'sessionDetail.statusModal.teacher.completed.label', descKey: 'sessionDetail.statusModal.teacher.completed.desc', color: 'blue'  },
+    { value: 'cancelled', labelKey: 'sessionDetail.statusModal.teacher.cancelled.label', descKey: 'sessionDetail.statusModal.teacher.cancelled.desc', color: 'red'   },
   ],
 };
 
@@ -74,6 +78,7 @@ const colorMap = {
 };
 
 const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm, role = 'admin' }) => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -89,10 +94,10 @@ const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm, role = 'admin'
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={() => { onClose(); setSelected(''); }} title="Change Session Status" size="sm">
+    <Modal isOpen={isOpen} onClose={() => { onClose(); setSelected(''); }} title={t('sessionDetail.statusModal.title')} size="sm">
       <div className="space-y-2 mb-5">
         <p className="text-sm text-gray-500 mb-3">
-          Current status:{' '}
+          {t('sessionDetail.statusModal.currentStatus')}{' '}
           <span className="font-medium text-gray-700 capitalize">{currentStatus}</span>
         </p>
         {options.map((opt) => (
@@ -110,8 +115,8 @@ const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm, role = 'admin'
               className="mt-0.5 accent-forest-600"
             />
             <div>
-              <p className="text-sm font-medium text-gray-800">{opt.label}</p>
-              <p className="text-xs text-gray-400">{opt.desc}</p>
+              <p className="text-sm font-medium text-gray-800">{t(opt.labelKey)}</p>
+              <p className="text-xs text-gray-400">{t(opt.descKey)}</p>
             </div>
           </label>
         ))}
@@ -137,6 +142,7 @@ const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm, role = 'admin'
 // ─── Edit session modal (admin only) ──────────────────────────────────────
 
 const EditSessionModal = ({ session, onClose, onSaved }) => {
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     title:            session.title            ?? '',
     description:      session.description      ?? '',
@@ -193,7 +199,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
       if (payload.age_range_max) payload.age_range_max = parseInt(payload.age_range_max, 10);
 
       const { data } = await sessionApi.updateSession(session.id, payload);
-      toast.success('Session updated successfully');
+      toast.success(t('sessionDetail.edit.updated'));
       onSaved(data.data.session);
       onClose();
     } catch (err) {
@@ -206,10 +212,10 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
   const minDateTime = new Date(Date.now() + 15 * 60 * 1000).toISOString().slice(0, 16);
 
   return (
-    <Modal isOpen onClose={onClose} title="Edit Session Details" size="lg">
+    <Modal isOpen onClose={onClose} title={t('sessionDetail.edit.modalTitle')} size="lg">
       <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-1">
         <Input
-          label="Title *"
+          label={t('sessionDetail.edit.titleField')}
           name="title"
           value={form.title}
           onChange={handleChange}
@@ -217,7 +223,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
         />
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Description</label>
+          <label className="text-sm font-medium text-gray-700">{t('sessionDetail.edit.description')}</label>
           <textarea
             name="description"
             value={form.description}
@@ -232,19 +238,19 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
 
         <div className="grid grid-cols-2 gap-3">
           <SelectField
-            label="Session type *"
+            label={t('sessionDetail.edit.sessionType')}
             name="session_type"
             value={form.session_type}
             onChange={handleChange}
             disabled={loading}
           >
-            <option value="one_on_one">One-on-One</option>
-            <option value="group">Group</option>
-            <option value="open">Open</option>
+            <option value="one_on_one">{t('session.type.one_on_one')}</option>
+            <option value="group">{t('session.type.group')}</option>
+            <option value="open">{t('session.type.open')}</option>
           </SelectField>
 
           <Input
-            label="Scheduled date & time *"
+            label={t('sessionDetail.edit.scheduledAt')}
             name="scheduled_at"
             type="datetime-local"
             value={form.scheduled_at}
@@ -254,7 +260,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
           />
 
           <Input
-            label="Duration (minutes)"
+            label={t('sessionDetail.edit.duration')}
             name="duration_minutes"
             type="number"
             min={15}
@@ -265,7 +271,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
           />
 
           <Input
-            label="Max students"
+            label={t('sessionDetail.edit.maxStudents')}
             name="max_students"
             type="number"
             min={1}
@@ -276,51 +282,51 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
           />
 
           <SelectField
-            label="Gender *"
+            label={t('sessionDetail.edit.gender')}
             name="session_gender"
             value={form.session_gender}
             onChange={handleChange}
             disabled={loading}
           >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="">{t('common.selectGender')}</option>
+            <option value="male">{t('common.gender.male')}</option>
+            <option value="female">{t('common.gender.female')}</option>
           </SelectField>
 
           <SelectField
-            label="Language *"
+            label={t('sessionDetail.edit.language')}
             name="session_language"
             value={form.session_language}
             onChange={handleChange}
             disabled={loading}
           >
-            <option value="">Select language</option>
+            <option value="">{t('common.selectLanguage')}</option>
             {LANGUAGES.map((l) => (
               <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>
             ))}
           </SelectField>
 
           <Input
-            label="Min age"
+            label={t('sessionDetail.edit.minAge')}
             name="age_range_min"
             type="number"
             min={4}
             max={99}
             value={form.age_range_min}
             onChange={handleChange}
-            placeholder="Optional"
+            placeholder={t('sessionDetail.edit.optional')}
             disabled={loading}
           />
 
           <Input
-            label="Max age"
+            label={t('sessionDetail.edit.maxAge')}
             name="age_range_max"
             type="number"
             min={5}
             max={100}
             value={form.age_range_max}
             onChange={handleChange}
-            placeholder="Optional"
+            placeholder={t('sessionDetail.edit.optional')}
             disabled={loading}
           />
         </div>
@@ -328,7 +334,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
         {/* Recurring days */}
         <div>
           <label className="text-sm font-medium text-gray-700 block mb-2">
-            Recurring days *
+            {t('sessionDetail.edit.recurringDays')}
           </label>
           <div className="flex flex-wrap gap-2">
             {DAYS.map((day) => (
@@ -355,7 +361,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
             Cancel
           </Button>
           <Button variant="primary" size="sm" loading={loading} type="submit">
-            Save Changes
+            {t('sessionDetail.edit.saveChanges')}
           </Button>
         </div>
       </form>
@@ -366,6 +372,7 @@ const EditSessionModal = ({ session, onClose, onSaved }) => {
 // ─── Main page ─────────────────────────────────────────────────────────────
 
 const AdminSessionDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
@@ -387,7 +394,7 @@ const AdminSessionDetailPage = () => {
       setSession(sessionRes.data.data.session);
       setEnrollments(enrollmentsRes.data.data.enrollments);
     } catch {
-      toast.error('Failed to load session');
+      toast.error(t('sessionDetail.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -426,7 +433,7 @@ const AdminSessionDetailPage = () => {
       setSession(data.data.session);
       setShowAssignModal(false);
       setSelectedTeacher('');
-      toast.success('Teacher assigned successfully');
+      toast.success(t('sessionDetail.assign.success'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Assignment failed');
     } finally {
@@ -439,7 +446,7 @@ const AdminSessionDetailPage = () => {
     try {
       const { data } = await sessionApi.approveTeacher(id);
       setSession(data.data.session);
-      toast.success('Teacher request approved');
+      toast.success(t('sessionDetail.assign.approveSuccess'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Approval failed');
     } finally {
@@ -449,7 +456,7 @@ const AdminSessionDetailPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Session Detail">
+      <DashboardLayout title={t('sessionDetail.details.title')}>
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
       </DashboardLayout>
     );
@@ -457,8 +464,8 @@ const AdminSessionDetailPage = () => {
 
   if (!session) {
     return (
-      <DashboardLayout title="Session Detail">
-        <EmptyState icon="📅" title="Session not found" />
+      <DashboardLayout title={t('sessionDetail.details.title')}>
+        <EmptyState icon="📅" title={t('sessionDetail.notFound')} />
       </DashboardLayout>
     );
   }
@@ -469,7 +476,7 @@ const AdminSessionDetailPage = () => {
   const isTeacherPending    = session.status === 'draft' && session.teacher_id;
 
   return (
-    <DashboardLayout title="Session Detail">
+    <DashboardLayout title={t('sessionDetail.details.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -484,7 +491,7 @@ const AdminSessionDetailPage = () => {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Sessions
+          {t('sessionDetail.back')}
         </Link>
 
         {/* Header */}
@@ -499,7 +506,7 @@ const AdminSessionDetailPage = () => {
                   {session.status.charAt(0).toUpperCase() + session.status.slice(1)}
                 </Badge>
                 {isTeacherPending && (
-                  <Badge variant="warning">Teacher Pending Approval</Badge>
+                  <Badge variant="warning">{t('sessionDetail.header.teacherPending')}</Badge>
                 )}
               </div>
               {session.description && (
@@ -516,12 +523,12 @@ const AdminSessionDetailPage = () => {
                              transition-colors shadow-sm"
                 >
                   <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                  Monitor Live
+                  {t('sessionDetail.header.monitorLive')}
                 </button>
               )}
               {isEditable && (
                 <Button variant="secondary" size="sm" onClick={() => setShowEditModal(true)}>
-                  ✏️ Edit Details
+                  {t('sessionDetail.header.editDetails')}
                 </Button>
               )}
               {isTeacherPending && (
@@ -531,16 +538,16 @@ const AdminSessionDetailPage = () => {
                   loading={actionLoading === 'approve-teacher'}
                   onClick={handleApproveTeacher}
                 >
-                  Approve Teacher
+                  {t('sessionDetail.header.approveTeacher')}
                 </Button>
               )}
               {isEditable && (
                 <Button variant="secondary" size="sm" onClick={() => setShowAssignModal(true)}>
-                  {session.teacher_id ? 'Change Teacher' : 'Assign Teacher'}
+                  {session.teacher_id ? t('sessionDetail.header.changeTeacher') : t('sessionDetail.header.assignTeacher')}
                 </Button>
               )}
               <Button variant="primary" size="sm" onClick={() => setShowStatusModal(true)}>
-                Change Status
+                {t('sessionDetail.header.changeStatus')}
               </Button>
             </div>
           </div>
@@ -550,7 +557,7 @@ const AdminSessionDetailPage = () => {
           {/* Session details */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-              <h3 className="font-display font-semibold text-forest-900">Session Details</h3>
+              <h3 className="font-display font-semibold text-forest-900">{t('sessionDetail.details.title')}</h3>
               {isEditable && (
                 <button
                   onClick={() => setShowEditModal(true)}
@@ -560,28 +567,28 @@ const AdminSessionDetailPage = () => {
                 </button>
               )}
             </div>
-            <InfoRow label="Type"         value={session.session_type?.replace('_', ' ')} />
-            <InfoRow label="Language"     value={session.session_language} />
-            <InfoRow label="Gender"       value={session.session_gender} />
+            <InfoRow label={t('sessionDetail.details.type')}     value={session.session_type?.replace('_', ' ')} />
+            <InfoRow label={t('sessionDetail.details.language')} value={session.session_language} />
+            <InfoRow label={t('sessionDetail.details.gender')}   value={session.session_gender} />
             <InfoRow
-              label="Age Range"
+              label={t('sessionDetail.details.ageRange')}
               value={
                 session.age_range_min || session.age_range_max
                   ? `${session.age_range_min ?? '?'} – ${session.age_range_max ?? '?'}`
-                  : 'All ages'
+                  : t('sessionDetail.details.allAges')
               }
             />
-            <InfoRow label="Duration"     value={`${session.duration_minutes} minutes`} />
-            <InfoRow label="Max Students" value={session.max_students} />
+            <InfoRow label={t('sessionDetail.details.durationLabel')} value={t('sessionDetail.details.duration', { count: session.duration_minutes })} />
+            <InfoRow label={t('sessionDetail.details.maxStudents')} value={session.max_students} />
             <InfoRow
-              label="Scheduled"
+              label={t('sessionDetail.details.scheduled')}
               value={new Date(session.scheduled_at).toLocaleString('en-MY', {
                 weekday:'short', day:'numeric', month:'short',
                 year:'numeric', hour:'2-digit', minute:'2-digit',
               })}
             />
             <InfoRow
-              label="Days"
+              label={t('sessionDetail.details.days')}
               value={session.session_days
                 ?.map((d) => d.charAt(0).toUpperCase() + d.slice(1))
                 .join(', ')}
@@ -591,7 +598,7 @@ const AdminSessionDetailPage = () => {
           {/* Teacher card */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
             <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-              <h3 className="font-display font-semibold text-forest-900">Assigned Teacher</h3>
+              <h3 className="font-display font-semibold text-forest-900">{t('sessionDetail.assigned.title')}</h3>
               {isEditable && (
                 <button
                   onClick={() => setShowAssignModal(true)}
@@ -607,18 +614,18 @@ const AdminSessionDetailPage = () => {
                 <div>
                   <p className="font-medium text-gray-800">{session.teacher_name}</p>
                   {session.teacher_ijazah_verified && (
-                    <Badge variant="gold" className="mt-1">✓ Ijazah Verified</Badge>
+                    <Badge variant="gold" className="mt-1">{t('sessionDetail.assigned.ijazahVerified')}</Badge>
                   )}
                   {isTeacherPending && (
-                    <p className="text-xs text-amber-600 mt-1">Awaiting your approval</p>
+                    <p className="text-xs text-amber-600 mt-1">{t('sessionDetail.assigned.awaitingApproval')}</p>
                   )}
                 </div>
               </div>
             ) : (
               <div className="text-center py-6">
-                <p className="text-gray-400 text-sm mb-3">No teacher assigned yet</p>
+                <p className="text-gray-400 text-sm mb-3">{t('sessionDetail.assigned.noTeacher')}</p>
                 <Button variant="secondary" size="sm" onClick={() => setShowAssignModal(true)}>
-                  Assign Teacher
+                  {t('sessionDetail.assigned.assignBtn')}
                 </Button>
               </div>
             )}
@@ -628,7 +635,7 @@ const AdminSessionDetailPage = () => {
         {/* Enrollments */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
-            <h3 className="font-display font-semibold text-forest-900">Enrollments</h3>
+            <h3 className="font-display font-semibold text-forest-900">{t('sessionDetail.enrollments.title')}</h3>
             <div className="flex gap-2">
               <Badge variant="pending">{pendingEnrollments.length} pending</Badge>
               <Badge variant="success">{approvedEnrollments.length} approved</Badge>
@@ -636,7 +643,7 @@ const AdminSessionDetailPage = () => {
           </div>
 
           {enrollments.length === 0 ? (
-            <EmptyState icon="👤" title="No enrollment requests yet" />
+            <EmptyState icon="👤" title={t('sessionDetail.enrollments.empty')} />
           ) : (
             <div className="divide-y divide-gray-50">
               {enrollments.map((e) => (
@@ -692,20 +699,20 @@ const AdminSessionDetailPage = () => {
       <Modal
         isOpen={showAssignModal}
         onClose={() => { setShowAssignModal(false); setSelectedTeacher(''); }}
-        title="Assign Teacher"
+        title={t('sessionDetail.assign.title')}
         size="sm"
       >
         <div className="mb-5">
-          <label className="text-sm font-medium text-gray-700 block mb-2">Select teacher</label>
+          <label className="text-sm font-medium text-gray-700 block mb-2">{t('sessionDetail.assign.label')}</label>
           <select
             value={selectedTeacher}
             onChange={(e) => setSelectedTeacher(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm
                        focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-800"
           >
-            <option value="">Choose a teacher...</option>
-            {teachers.map((t) => (
-              <option key={t.id} value={t.id}>{t.full_name} ({t.email})</option>
+            <option value="">{t('sessionDetail.assign.placeholder')}</option>
+            {teachers.map((teacher_item) => (
+              <option key={teacher_item.id} value={teacher_item.id}>{teacher_item.full_name} ({teacher_item.email})</option>
             ))}
           </select>
         </div>
@@ -720,7 +727,7 @@ const AdminSessionDetailPage = () => {
             loading={actionLoading === 'assign'}
             onClick={handleAssignTeacher}
           >
-            Assign
+            {t('sessionDetail.assign.button')}
           </Button>
         </div>
       </Modal>

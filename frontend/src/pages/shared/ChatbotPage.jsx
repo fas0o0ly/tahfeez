@@ -1,5 +1,6 @@
 // src/pages/shared/ChatbotPage.jsx
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { chatbotApi } from '../../api/chatbotApi';
 import toast from 'react-hot-toast';
@@ -14,11 +15,11 @@ const relativeTime = (dateStr) => {
   return new Date(dateStr).toLocaleDateString('en-MY', { day: 'numeric', month: 'short' });
 };
 
-const EXAMPLE_PROMPTS = [
-  'I feel anxious about my future',
-  'How do I find peace during hardship?',
-  'I feel lost and far from Allah',
-  'Help me understand the concept of tawakkul',
+const EXAMPLE_PROMPT_KEYS = [
+  'chatbot.examples.0',
+  'chatbot.examples.1',
+  'chatbot.examples.2',
+  'chatbot.examples.3',
 ];
 
 // ─── Verse card ───────────────────────────────────────────────────────────────
@@ -93,13 +94,15 @@ const ThinkingDots = () => (
 
 // ─── Assistant message ────────────────────────────────────────────────────────
 
-const AssistantMessage = ({ item }) => (
+const AssistantMessage = ({ item }) => {
+  const { t } = useTranslation();
+  return (
   <div className="max-w-2xl">
     {item.is_out_of_scope ? (
       <div className="rounded-xl border border-orange-200 bg-orange-50 p-4">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-orange-500 text-sm">⚠</span>
-          <span className="text-xs font-semibold text-orange-600">Out of Scope</span>
+          <span className="text-xs font-semibold text-orange-600">{t('chatbot.outOfScope')}</span>
         </div>
         <p className="text-sm text-orange-700 leading-relaxed">{item.response}</p>
       </div>
@@ -137,7 +140,8 @@ const AssistantMessage = ({ item }) => (
       </div>
     )}
   </div>
-);
+  );
+};
 
 // ─── Chat thread ──────────────────────────────────────────────────────────────
 
@@ -165,17 +169,20 @@ const ChatThread = ({ item }) => (
 
 // ─── Welcome state ────────────────────────────────────────────────────────────
 
-const WelcomeState = ({ onPrompt }) => (
+const WelcomeState = ({ onPrompt }) => {
+  const { t } = useTranslation();
+  const EXAMPLE_PROMPTS = EXAMPLE_PROMPT_KEYS.map((k) => t(k));
+  return (
   <div className="flex-1 flex flex-col items-center justify-center px-6 text-center py-10">
     <div className="w-16 h-16 rounded-2xl bg-amber-50 border-2 border-amber-200
                     flex items-center justify-center mb-4 shadow-sm">
       <span style={{ fontFamily: 'Amiri, serif', color: '#92400e', fontSize: '28px' }}>ق</span>
     </div>
     <h2 className="text-xl font-display font-semibold text-forest-900 mb-2">
-      Quran Guidance Assistant
+      {t('chatbot.welcome.title')}
     </h2>
     <p className="text-sm text-gray-500 max-w-sm mb-8">
-      Share what is on your heart and receive guidance rooted in the words of Allah.
+      {t('chatbot.welcome.subtitle')}
     </p>
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
       {EXAMPLE_PROMPTS.map((p) => (
@@ -191,11 +198,13 @@ const WelcomeState = ({ onPrompt }) => (
       ))}
     </div>
   </div>
-);
+  );
+};
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 const ChatbotPage = () => {
+  const { t } = useTranslation();
   const [history, setHistory]      = useState([]);
   const [histLoading, setHistLoad] = useState(true);
   const [activeItem, setActive]    = useState(null);
@@ -304,7 +313,7 @@ const ChatbotPage = () => {
 
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
-            <span className="font-display font-semibold text-forest-900 text-sm">History</span>
+            <span className="font-display font-semibold text-forest-900 text-sm">{t('chatbot.history')}</span>
           </div>
 
           {/* New Chat button */}
@@ -318,7 +327,7 @@ const ChatbotPage = () => {
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
-              New Chat
+              {t('chatbot.newChat')}
             </button>
           </div>
 
@@ -331,7 +340,7 @@ const ChatbotPage = () => {
               </div>
             ) : history.length === 0 ? (
               <div className="py-10 px-4 text-center">
-                <p className="text-xs text-gray-400">No conversations yet</p>
+                <p className="text-xs text-gray-400">{t('chatbot.noHistory')}</p>
               </div>
             ) : (
               history.map((h) => {
@@ -405,7 +414,7 @@ const ChatbotPage = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 rows={1}
-                placeholder="Share what is on your heart…"
+                placeholder={t('chatbot.inputPlaceholder')}
                 disabled={thinking}
                 className="flex-1 resize-none bg-gray-50 border border-gray-200
                            rounded-xl px-4 py-3 text-sm text-gray-800 placeholder-gray-400
@@ -438,7 +447,7 @@ const ChatbotPage = () => {
               </button>
             </div>
             <p className="text-[10px] text-gray-400 mt-1.5 text-center">
-              Responses are grounded solely in the Quran · Press Enter to send
+              {t('chatbot.disclaimer')}
             </p>
           </div>
         </div>

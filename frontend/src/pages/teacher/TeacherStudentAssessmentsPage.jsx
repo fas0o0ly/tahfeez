@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { assessmentApi } from '../../api/assessmentApi';
 import { attendanceApi } from '../../api/attendanceApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -10,22 +11,6 @@ import { EmptyState, Spinner } from '../../components/common/EmptyState';
 import Button from '../../components/common/Button';
 import Badge from '../../components/common/Badge';
 import toast from 'react-hot-toast';
-
-const STATUS_OPTIONS = [
-  { value: 'not_started',    label: 'Not Started' },
-  { value: 'in_progress',    label: 'In Progress' },
-  { value: 'needs_revision', label: 'Needs Revision' },
-  { value: 'completed',      label: 'Completed' },
-  { value: 'certified',      label: 'Certified (Hafiz)' },
-];
-
-const GRADE_OPTIONS = [
-  { value: 'excellent', label: 'Excellent' },
-  { value: 'very_good', label: 'Very Good' },
-  { value: 'good',      label: 'Good' },
-  { value: 'acceptable',label: 'Acceptable' },
-  { value: 'weak',      label: 'Weak' },
-];
 
 const statusColors = {
   not_started:    'gray',
@@ -39,7 +24,24 @@ const fmtDate = (d) =>
   d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
 
 const TeacherStudentAssessmentsPage = () => {
+  const { t } = useTranslation();
   const { studentId } = useParams();
+
+  const STATUS_OPTIONS = [
+    { value: 'not_started',    label: t('progress.status.not_started') },
+    { value: 'in_progress',    label: t('progress.status.in_progress') },
+    { value: 'needs_revision', label: t('progress.status.needs_revision') },
+    { value: 'completed',      label: t('progress.status.completed') },
+    { value: 'certified',      label: t('progress.status.certified') },
+  ];
+
+  const GRADE_OPTIONS = [
+    { value: 'excellent', label: t('assess.grade.excellent') },
+    { value: 'very_good', label: t('assess.grade.very_good') },
+    { value: 'good',      label: t('assess.grade.good') },
+    { value: 'acceptable',label: t('assess.grade.acceptable') },
+    { value: 'weak',      label: t('assess.grade.weak') },
+  ];
 
   const [assessments, setAssessments]     = useState([]);
   const [loading, setLoading]             = useState(true);
@@ -113,7 +115,7 @@ const TeacherStudentAssessmentsPage = () => {
         teacher_notes:          progressEdit.teacher_notes  || null,
       });
       setProgress(res.data.data.progress);
-      toast.success('Progress updated');
+      toast.success(t('assess.teacher.progress.saveSuccess'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to update progress');
     } finally {
@@ -132,7 +134,7 @@ const TeacherStudentAssessmentsPage = () => {
       setNoteContent('');
       setNotePrivate(false);
       await fetchNotes();
-      toast.success('Note added');
+      toast.success(t('assess.teacher.notes.addSuccess'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to add note');
     } finally {
@@ -145,7 +147,7 @@ const TeacherStudentAssessmentsPage = () => {
     try {
       await attendanceApi.deleteNote(noteId);
       setNotes((prev) => prev.filter((n) => n.id !== noteId));
-      toast.success('Note deleted');
+      toast.success(t('assess.teacher.notes.deleteSuccess'));
     } catch {
       toast.error('Failed to delete note');
     } finally {
@@ -159,7 +161,7 @@ const TeacherStudentAssessmentsPage = () => {
   };
 
   return (
-    <DashboardLayout title="Student Assessments">
+    <DashboardLayout title={t('assess.teacher.pageTitle')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -174,16 +176,16 @@ const TeacherStudentAssessmentsPage = () => {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Sessions
+          {t('assess.teacher.back')}
         </Link>
 
         {/* ── Progress Card ──────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-5">
-          <h3 className="font-display font-semibold text-forest-900 mb-4">Student Progress</h3>
+          <h3 className="font-display font-semibold text-forest-900 mb-4">{t('assess.teacher.progress.title')}</h3>
 
           <div className="grid sm:grid-cols-2 gap-3 mb-4">
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Juz Memorized (0–30)</label>
+              <label className="text-xs text-gray-500 block mb-1">{t('assess.teacher.progress.juzLabel')}</label>
               <input
                 type="number"
                 min={0} max={30}
@@ -194,7 +196,7 @@ const TeacherStudentAssessmentsPage = () => {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Surahs Memorized (0–114)</label>
+              <label className="text-xs text-gray-500 block mb-1">{t('assess.teacher.progress.surahsLabel')}</label>
               <input
                 type="number"
                 min={0} max={114}
@@ -205,7 +207,7 @@ const TeacherStudentAssessmentsPage = () => {
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Status</label>
+              <label className="text-xs text-gray-500 block mb-1">{t('assess.teacher.progress.statusLabel')}</label>
               <select
                 value={progressEdit.status ?? ''}
                 onChange={(e) => setProgressEdit((p) => ({ ...p, status: e.target.value }))}
@@ -218,14 +220,14 @@ const TeacherStudentAssessmentsPage = () => {
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 block mb-1">Accuracy Grade</label>
+              <label className="text-xs text-gray-500 block mb-1">{t('assess.teacher.progress.gradeLabel')}</label>
               <select
                 value={progressEdit.accuracy_grade ?? ''}
                 onChange={(e) => setProgressEdit((p) => ({ ...p, accuracy_grade: e.target.value }))}
                 className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl
                            focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400"
               >
-                <option value="">— Not set —</option>
+                <option value="">{t('assess.teacher.progress.gradeNotSet')}</option>
                 {GRADE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
@@ -234,12 +236,12 @@ const TeacherStudentAssessmentsPage = () => {
           </div>
 
           <div className="mb-4">
-            <label className="text-xs text-gray-500 block mb-1">Progress Notes</label>
+            <label className="text-xs text-gray-500 block mb-1">{t('assess.teacher.progress.notesLabel')}</label>
             <textarea
               rows={3}
               value={progressEdit.teacher_notes ?? ''}
               onChange={(e) => setProgressEdit((p) => ({ ...p, teacher_notes: e.target.value }))}
-              placeholder="General notes about this student's memorization progress..."
+              placeholder={t('assess.teacher.progress.notesPlaceholder')}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl resize-none
                          focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400"
             />
@@ -247,11 +249,13 @@ const TeacherStudentAssessmentsPage = () => {
 
           <div className="flex items-center justify-between">
             {progress?.last_reviewed_at && (
-              <p className="text-xs text-gray-400">Last reviewed: {fmtDate(progress.last_reviewed_at)}</p>
+              <p className="text-xs text-gray-400">
+                {t('assess.teacher.progress.lastReviewed', { date: fmtDate(progress.last_reviewed_at) })}
+              </p>
             )}
             <div className="ml-auto">
               <Button variant="primary" size="sm" loading={progressSaving} onClick={handleSaveProgress}>
-                Save Progress
+                {t('assess.teacher.progress.saveBtn')}
               </Button>
             </div>
           </div>
@@ -259,7 +263,7 @@ const TeacherStudentAssessmentsPage = () => {
 
         {/* ── Teacher Notes ──────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-5">
-          <h3 className="font-display font-semibold text-forest-900 mb-4">Session Notes</h3>
+          <h3 className="font-display font-semibold text-forest-900 mb-4">{t('assess.teacher.notes.title')}</h3>
 
           {/* Add note form */}
           <div className="mb-4 space-y-2">
@@ -267,7 +271,7 @@ const TeacherStudentAssessmentsPage = () => {
               rows={3}
               value={noteContent}
               onChange={(e) => setNoteContent(e.target.value)}
-              placeholder="Add a note about this student's session..."
+              placeholder={t('assess.teacher.notes.placeholder')}
               className="w-full px-3 py-2 text-sm border border-gray-200 rounded-xl resize-none
                          focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400"
             />
@@ -279,7 +283,7 @@ const TeacherStudentAssessmentsPage = () => {
                   onChange={(e) => setNotePrivate(e.target.checked)}
                   className="accent-forest-600 w-3.5 h-3.5"
                 />
-                Private (only you can see this)
+                {t('assess.teacher.notes.privateLabel')}
               </label>
               <Button
                 variant="primary"
@@ -288,14 +292,14 @@ const TeacherStudentAssessmentsPage = () => {
                 disabled={!noteContent.trim()}
                 onClick={handleAddNote}
               >
-                Add Note
+                {t('assess.teacher.notes.addBtn')}
               </Button>
             </div>
           </div>
 
           {/* Notes list */}
           {notes.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">No notes yet.</p>
+            <p className="text-sm text-gray-400 text-center py-4">{t('assess.teacher.notes.empty')}</p>
           ) : (
             <div className="space-y-2">
               {notes.map((note) => (
@@ -306,7 +310,7 @@ const TeacherStudentAssessmentsPage = () => {
                       <p className="text-xs text-gray-400">{fmtDate(note.created_at)}</p>
                       {note.is_private && (
                         <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md font-medium">
-                          Private
+                          {t('assess.teacher.notes.privateTag')}
                         </span>
                       )}
                     </div>
@@ -331,10 +335,10 @@ const TeacherStudentAssessmentsPage = () => {
         {/* ── Recitation Assessments ─────────────────────────────────────── */}
         <div className="mb-6">
           <h2 className="font-display text-2xl font-semibold text-forest-900">
-            Recitation History
+            {t('assess.teacher.history.title')}
           </h2>
           <p className="text-sm text-gray-400 mt-0.5">
-            Click an assessment to add or update your review
+            {t('assess.teacher.history.subtitle')}
           </p>
         </div>
 
@@ -353,8 +357,8 @@ const TeacherStudentAssessmentsPage = () => {
         {!loading && !error && assessments.length === 0 && (
           <EmptyState
             icon="📋"
-            title="No assessments yet"
-            description="This student hasn't submitted any recitation assessments yet."
+            title={t('assess.teacher.history.empty.title')}
+            description={t('assess.teacher.history.empty.desc')}
           />
         )}
 

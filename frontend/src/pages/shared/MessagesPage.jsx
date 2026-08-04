@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { messageApi } from '../../api/messageApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -19,6 +20,7 @@ const relativeTime = (dateStr) => {
 
 // ─── Compose Modal ───────────────────────────────────────────────────────────
 const ComposeModal = ({ isOpen, onClose, onSent }) => {
+  const { t } = useTranslation();
   const [contacts, setContacts]     = useState([]);
   const [recipientId, setRecipient] = useState('');
   const [subject, setSubject]       = useState('');
@@ -41,29 +43,29 @@ const ComposeModal = ({ isOpen, onClose, onSent }) => {
         subject: subject.trim() || undefined,
         content: content.trim(),
       });
-      toast.success('Message sent');
+      toast.success(t('messages.sent'));
       setRecipient(''); setSubject(''); setContent('');
       onSent(recipientId);
       onClose();
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to send message');
+      toast.error(err?.response?.data?.message || t('messages.failedToSend'));
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="New Message" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('messages.compose.title')} size="md">
       <div className="space-y-4">
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+          <label className="block text-xs font-medium text-gray-500 mb-1">{t('messages.compose.to')}</label>
           <select
             value={recipientId}
             onChange={(e) => setRecipient(e.target.value)}
             className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2
                        focus:outline-none focus:ring-2 focus:ring-forest-200"
           >
-            <option value="">Select recipient…</option>
+            <option value="">{t('messages.compose.selectRecipient')}</option>
             {contacts.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.full_name} ({c.role})
@@ -72,31 +74,31 @@ const ComposeModal = ({ isOpen, onClose, onSent }) => {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Subject (optional)</label>
+          <label className="block text-xs font-medium text-gray-500 mb-1">{t('messages.compose.subject')}</label>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             maxLength={255}
-            placeholder="Subject…"
+            placeholder={t('messages.compose.subjectPlaceholder')}
             className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2
                        focus:outline-none focus:ring-2 focus:ring-forest-200"
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">Message</label>
+          <label className="block text-xs font-medium text-gray-500 mb-1">{t('messages.compose.message')}</label>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={5}
             maxLength={5000}
-            placeholder="Write your message…"
+            placeholder={t('messages.compose.messagePlaceholder')}
             className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2
                        focus:outline-none focus:ring-2 focus:ring-forest-200 resize-none"
           />
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" size="sm" onClick={onClose}>{t('common.cancel')}</Button>
           <Button
             variant="primary"
             size="sm"
@@ -104,7 +106,7 @@ const ComposeModal = ({ isOpen, onClose, onSent }) => {
             disabled={!recipientId || !content.trim()}
             onClick={handleSend}
           >
-            Send
+            {t('messages.send')}
           </Button>
         </div>
       </div>
@@ -114,6 +116,7 @@ const ComposeModal = ({ isOpen, onClose, onSent }) => {
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 const MessagesPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
 
@@ -133,7 +136,7 @@ const MessagesPage = () => {
     try {
       const res = await messageApi.getInbox();
       setConvos(res.data.data.conversations || []);
-    } catch { toast.error('Failed to load inbox'); }
+    } catch { toast.error(t('messages.failedToLoad')); }
     finally { setConvLoad(false); }
   }, []);
 
@@ -148,7 +151,7 @@ const MessagesPage = () => {
       setConvos((prev) =>
         prev.map((c) => c.other_user_id === otherUserId ? { ...c, unread_count: 0 } : c)
       );
-    } catch { toast.error('Failed to load conversation'); }
+    } catch { toast.error(t('messages.failedConversation')); }
     finally { setThreadL(false); }
   }, []);
 
@@ -197,7 +200,7 @@ const MessagesPage = () => {
         <div className="w-72 flex-shrink-0 bg-white rounded-2xl border border-gray-100
                         shadow-card flex flex-col overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-            <span className="font-display font-semibold text-forest-900 text-sm">Inbox</span>
+            <span className="font-display font-semibold text-forest-900 text-sm">{t('messages.inbox')}</span>
             <button
               onClick={() => setCompose(true)}
               className="p-1.5 rounded-lg text-forest-600 hover:bg-forest-50 transition-colors"
@@ -216,7 +219,7 @@ const MessagesPage = () => {
               <div className="flex justify-center py-8"><Spinner /></div>
             ) : conversations.length === 0 ? (
               <div className="py-10">
-                <EmptyState icon="✉️" title="No conversations" description="Start a new message above" />
+                <EmptyState icon="✉️" title={t('messages.noConversations.title')} description={t('messages.noConversations.desc')} />
               </div>
             ) : (
               conversations.map((c) => (
@@ -262,8 +265,8 @@ const MessagesPage = () => {
             <div className="flex-1 flex items-center justify-center">
               <EmptyState
                 icon="💬"
-                title="Select a conversation"
-                description="Choose a conversation from the left or compose a new message"
+                title={t('messages.selectConversation.title')}
+                description={t('messages.selectConversation.desc')}
               />
             </div>
           ) : (
@@ -281,7 +284,7 @@ const MessagesPage = () => {
                 {threadLoading ? (
                   <div className="flex justify-center py-8"><Spinner /></div>
                 ) : messages.length === 0 ? (
-                  <EmptyState icon="💬" title="No messages yet" description="Send the first message below" />
+                  <EmptyState icon="💬" title={t('messages.noMessages.title')} description={t('messages.noMessages.desc')} />
                 ) : (
                   messages.map((m) => {
                     const isMe = m.sender_id === user?.id;
@@ -329,7 +332,7 @@ const MessagesPage = () => {
                   }}
                   rows={2}
                   maxLength={5000}
-                  placeholder="Write a reply… (Enter to send)"
+                  placeholder={t('messages.replyPlaceholder')}
                   className="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2
                              focus:outline-none focus:ring-2 focus:ring-forest-200 resize-none"
                 />
@@ -340,7 +343,7 @@ const MessagesPage = () => {
                   disabled={!reply.trim()}
                   onClick={handleSendReply}
                 >
-                  Send
+                  {t('messages.send')}
                 </Button>
               </div>
             </>

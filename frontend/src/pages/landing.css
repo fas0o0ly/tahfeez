@@ -752,3 +752,9 @@
 .lp-ornament-line:last-child {
   background: linear-gradient(90deg, var(--gold), transparent);
 }
+
+/* ── RTL overrides ── */
+[dir="rtl"] .lp-how-step::after   { right: auto; left: -14px; transform: scaleX(-1); }
+[dir="rtl"] .lp-test-quote-mark   { left: auto; right: 20px; }
+[dir="rtl"] .lp-stats-wrap::before { left: auto; right: 16px; }
+[dir="rtl"] .lp-stats-wrap::after  { right: auto; left: 16px; }

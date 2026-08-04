@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useUsers } from '../../hooks/useUsers';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Badge from '../../components/common/Badge';
@@ -13,6 +14,7 @@ import Button from '../../components/common/Button';
 // ─── Filter bar ────────────────────────────────────────────────────────────
 
 const FilterBar = ({ filters, onFilterChange }) => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState(filters.search || '');
 
   const handleSearchSubmit = (e) => {
@@ -36,13 +38,13 @@ const FilterBar = ({ filters, onFilterChange }) => {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email..."
+            placeholder={t('users.search.placeholder')}
             className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl
                        focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400
                        bg-white placeholder:text-gray-400"
           />
         </div>
-        <Button type="submit" variant="primary" size="sm">Search</Button>
+        <Button type="submit" variant="primary" size="sm">{t('common.search')}</Button>
       </form>
 
       {/* Role filter */}
@@ -52,10 +54,10 @@ const FilterBar = ({ filters, onFilterChange }) => {
         className="px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white
                    focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-700"
       >
-        <option value="">All roles</option>
-        <option value="student">Student</option>
-        <option value="teacher">Teacher</option>
-        <option value="admin">Admin</option>
+        <option value="">{t('users.filter.allRoles')}</option>
+        <option value="student">{t('role.student')}</option>
+        <option value="teacher">{t('role.teacher')}</option>
+        <option value="admin">{t('role.admin')}</option>
       </select>
 
       {/* Status filter */}
@@ -65,11 +67,11 @@ const FilterBar = ({ filters, onFilterChange }) => {
         className="px-3 py-2.5 text-sm border border-gray-200 rounded-xl bg-white
                    focus:outline-none focus:ring-2 focus:ring-forest-200 text-gray-700"
       >
-        <option value="">All statuses</option>
-        <option value="active">Active</option>
-        <option value="pending">Pending</option>
-        <option value="suspended">Suspended</option>
-        <option value="banned">Banned</option>
+        <option value="">{t('users.filter.allStatuses')}</option>
+        <option value="active">{t('common.status.active')}</option>
+        <option value="pending">{t('common.status.pending')}</option>
+        <option value="suspended">{t('common.status.suspended')}</option>
+        <option value="banned">{t('common.status.banned')}</option>
       </select>
     </div>
   );
@@ -78,13 +80,14 @@ const FilterBar = ({ filters, onFilterChange }) => {
 // ─── Status action modal ───────────────────────────────────────────────────
 
 const StatusModal = ({ user, onClose, onConfirm }) => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
 
   const options = [
-    { value: 'active', label: 'Activate', description: 'Allow user to log in', variant: 'success' },
-    { value: 'suspended', label: 'Suspend', description: 'Temporarily block access', variant: 'warning' },
-    { value: 'banned', label: 'Ban', description: 'Permanently block access', variant: 'error' },
+    { value: 'active',    label: t('users.statusModal.activate.label'), description: t('users.statusModal.activate.desc'), variant: 'success' },
+    { value: 'suspended', label: t('users.statusModal.suspend.label'),  description: t('users.statusModal.suspend.desc'),  variant: 'warning' },
+    { value: 'banned',    label: t('users.statusModal.ban.label'),      description: t('users.statusModal.ban.desc'),      variant: 'error'   },
   ].filter((o) => o.value !== user?.status);
 
   const handleConfirm = async () => {
@@ -96,11 +99,10 @@ const StatusModal = ({ user, onClose, onConfirm }) => {
   };
 
   return (
-    <Modal isOpen={!!user} onClose={onClose} title="Change Account Status" size="sm">
+    <Modal isOpen={!!user} onClose={onClose} title={t('users.statusModal.title')} size="sm">
       <div className="space-y-3 mb-5">
         <p className="text-sm text-gray-500">
-          Select a new status for{' '}
-          <span className="font-medium text-gray-700">{user?.full_name}</span>:
+          {t('users.statusModal.prompt', { name: user?.full_name })}
         </p>
         {options.map((opt) => (
           <label
@@ -128,7 +130,7 @@ const StatusModal = ({ user, onClose, onConfirm }) => {
       </div>
 
       <div className="flex gap-2 justify-end">
-        <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+        <Button variant="secondary" size="sm" onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           variant="primary"
           size="sm"
@@ -136,7 +138,7 @@ const StatusModal = ({ user, onClose, onConfirm }) => {
           loading={loading}
           onClick={handleConfirm}
         >
-          Confirm
+          {t('common.confirm')}
         </Button>
       </div>
     </Modal>
@@ -146,6 +148,7 @@ const StatusModal = ({ user, onClose, onConfirm }) => {
 // ─── Main page ─────────────────────────────────────────────────────────────
 
 const UsersPage = () => {
+  const { t } = useTranslation();
   const { users, pagination, loading, error, filters, updateFilter, setPage, updateUserStatus } = useUsers();
   const [statusTarget, setStatusTarget] = useState(null);
 
@@ -163,9 +166,9 @@ const UsersPage = () => {
         {/* Page header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="font-display text-2xl font-semibold text-forest-900">All Users</h2>
+            <h2 className="font-display text-2xl font-semibold text-forest-900">{t('users.title')}</h2>
             <p className="text-gray-500 text-sm mt-0.5">
-              {pagination ? `${pagination.total} total users` : 'Loading...'}
+              {pagination ? t('users.totalCount', { count: pagination.total }) : t('users.loading')}
             </p>
           </div>
         </div>
@@ -182,14 +185,14 @@ const UsersPage = () => {
           ) : error ? (
             <EmptyState
               icon="⚠️"
-              title="Failed to load users"
+              title={t('users.error')}
               description={error}
             />
           ) : users.length === 0 ? (
             <EmptyState
               icon="👤"
-              title="No users found"
-              description="Try adjusting your search or filter criteria"
+              title={t('users.notFound.title')}
+              description={t('users.notFound.desc')}
             />
           ) : (
             <>
@@ -199,19 +202,19 @@ const UsersPage = () => {
                   <thead>
                     <tr className="border-b border-gray-100 bg-gray-50/50">
                       <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        User
+                        {t('users.table.user')}
                       </th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Role
+                        {t('users.table.role')}
                       </th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Status
+                        {t('users.table.status')}
                       </th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Joined
+                        {t('users.table.joined')}
                       </th>
                       <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                        Actions
+                        {t('users.table.actions')}
                       </th>
                     </tr>
                   </thead>
@@ -254,7 +257,7 @@ const UsersPage = () => {
                                          font-medium transition-colors px-2 py-1
                                          rounded-lg hover:bg-forest-50"
                             >
-                              Change status
+                              {t('users.changeStatus')}
                             </button>
                             <Link
                               to={`/admin/users/${user.id}`}
@@ -262,7 +265,7 @@ const UsersPage = () => {
                                          font-medium transition-colors px-2 py-1
                                          rounded-lg hover:bg-forest-50"
                             >
-                              View →
+                              {t('users.view')}
                             </Link>
                           </div>
                         </td>

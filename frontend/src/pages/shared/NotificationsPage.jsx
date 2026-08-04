@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { notificationApi } from '../../api/notificationApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -32,6 +33,7 @@ const relativeTime = (dateStr) => {
 };
 
 const NotificationsPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate  = useNavigate();
 
@@ -107,14 +109,14 @@ const NotificationsPage = () => {
   const hasUnread = notifications.some((n) => !n.is_read);
 
   return (
-    <DashboardLayout title="Notifications">
+    <DashboardLayout title={t('notifications.title')}>
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card overflow-hidden">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between
                           gap-3 px-6 py-4 border-b border-gray-100">
             <div className="flex items-center gap-3">
-              <h2 className="font-display font-semibold text-forest-900">Notifications</h2>
+              <h2 className="font-display font-semibold text-forest-900">{t('notifications.title')}</h2>
               <div className="flex gap-1">
                 <button
                   onClick={() => setUnreadOnly(false)}
@@ -123,7 +125,7 @@ const NotificationsPage = () => {
                                 ? 'bg-forest-600 text-white'
                                 : 'text-gray-500 hover:bg-gray-100'}`}
                 >
-                  All
+                  {t('notifications.all')}
                 </button>
                 <button
                   onClick={() => setUnreadOnly(true)}
@@ -132,7 +134,7 @@ const NotificationsPage = () => {
                                 ? 'bg-forest-600 text-white'
                                 : 'text-gray-500 hover:bg-gray-100'}`}
                 >
-                  Unread
+                  {t('notifications.unread')}
                 </button>
               </div>
             </div>
@@ -143,7 +145,7 @@ const NotificationsPage = () => {
                 loading={markingAll}
                 onClick={handleMarkAllRead}
               >
-                Mark all read
+                {t('notifications.markAllRead')}
               </Button>
             )}
           </div>
@@ -155,7 +157,7 @@ const NotificationsPage = () => {
             <div className="py-16">
               <EmptyState
                 icon="🔔"
-                title={unreadOnly ? 'No unread notifications' : 'No notifications yet'}
+                title={unreadOnly ? t('notifications.noUnread') : t('notifications.empty')}
               />
             </div>
           ) : (
@@ -179,7 +181,7 @@ const NotificationsPage = () => {
                                      ${n.is_read ? 'text-gray-600' : 'text-gray-800 font-semibold'}`}>
                         {n.title}
                       </p>
-                      {!n.is_read && <Badge variant="info">New</Badge>}
+                      {!n.is_read && <Badge variant="info">{t('notifications.new')}</Badge>}
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{n.body}</p>
                     <p className="text-[10px] text-gray-300 mt-1">{relativeTime(n.created_at)}</p>
@@ -227,16 +229,16 @@ const NotificationsPage = () => {
                 className="px-3 py-1.5 text-xs rounded-lg border border-gray-200
                            disabled:opacity-40 hover:bg-gray-50 transition-colors"
               >
-                ← Prev
+                {t('notifications.prev')}
               </button>
-              <span className="text-xs text-gray-400">Page {page} of {totalPages}</span>
+              <span className="text-xs text-gray-400">{t('notifications.page', { page, total: totalPages })}</span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => load(page + 1, unreadOnly)}
                 className="px-3 py-1.5 text-xs rounded-lg border border-gray-200
                            disabled:opacity-40 hover:bg-gray-50 transition-colors"
               >
-                Next →
+                {t('notifications.next')}
               </button>
             </div>
           )}

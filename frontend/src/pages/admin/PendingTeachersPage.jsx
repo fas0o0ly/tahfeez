@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { userApi } from '../../api/userApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Avatar from '../../components/common/Avatar';
@@ -13,6 +14,7 @@ import toast from 'react-hot-toast';
 // ─── Teacher card ──────────────────────────────────────────────────────────
 
 const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
 
   const formatDate = (d) =>
@@ -39,18 +41,18 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
               <h3 className="font-display font-semibold text-forest-900 text-lg leading-tight">
                 {teacher.full_name}
               </h3>
-              <Badge variant="pending">Pending</Badge>
+              <Badge variant="pending">{t('common.status.pending')}</Badge>
             </div>
             <p className="text-sm text-gray-500">{teacher.email}</p>
             <p className="text-xs text-gray-400 mt-0.5">
-              Applied {formatDate(teacher.created_at)}
+              {t('pending.teacher.applied', { date: formatDate(teacher.created_at) })}
             </p>
 
             {/* Quick info chips */}
             <div className="flex flex-wrap gap-2 mt-3">
               {teacher.years_experience && (
                 <span className="text-xs bg-forest-50 text-forest-600 px-2.5 py-1 rounded-full">
-                  {teacher.years_experience} yrs experience
+                  {t('pending.teacher.yrsExperience', { count: teacher.years_experience })}
                 </span>
               )}
               {teacher.timezone && (
@@ -60,7 +62,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
               )}
               {teacher.ijazah_chain && (
                 <span className="text-xs bg-gold-50 text-gold-700 px-2.5 py-1 rounded-full border border-gold-200">
-                  Has Ijazah chain
+                  {t('pending.teacher.hasIjazah')}
                 </span>
               )}
               {teacher.cv_url && (
@@ -70,7 +72,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
                   rel="noopener noreferrer"
                   className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full hover:bg-blue-100 transition-colors"
                 >
-                  View CV →
+                  {t('pending.teacher.viewCv')}
                 </a>
               )}
             </div>
@@ -83,7 +85,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
           className="mt-4 text-xs text-gray-400 hover:text-forest-600
                      transition-colors flex items-center gap-1"
         >
-          {expanded ? 'Hide details' : 'Show more details'}
+          {expanded ? t('pending.teacher.hideDetails') : t('pending.teacher.showMore')}
           <svg
             className={`w-3.5 h-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`}
             fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
@@ -105,14 +107,14 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
               <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
                 {teacher.bio && (
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Bio</p>
+                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t('pending.teacher.bio')}</p>
                     <p className="text-sm text-gray-600 leading-relaxed">{teacher.bio}</p>
                   </div>
                 )}
                 {teacher.qualifications && (
                   <div>
                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
-                      Qualifications
+                      {t('pending.teacher.qualifications')}
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed">{teacher.qualifications}</p>
                   </div>
@@ -120,7 +122,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
                 {teacher.specializations?.length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-                      Specializations
+                      {t('pending.teacher.specializations')}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {teacher.specializations.map((s) => (
@@ -132,7 +134,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
                 {teacher.ijazah_chain && (
                   <div>
                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
-                      Ijazah Chain
+                      {t('pending.teacher.ijazahChain')}
                     </p>
                     <p className="text-sm text-gray-600 leading-relaxed">{teacher.ijazah_chain}</p>
                   </div>
@@ -140,7 +142,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
                 {teacher.available_days?.length > 0 && (
                   <div>
                     <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
-                      Available Days
+                      {t('pending.teacher.availableDays')}
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {teacher.available_days.map((d) => (
@@ -164,7 +166,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
           to={`/admin/users/${teacher.id}`}
           className="text-xs text-gray-400 hover:text-forest-600 transition-colors"
         >
-          Full profile →
+          {t('pending.teacher.fullProfile')}
         </Link>
         <div className="flex gap-2">
           <Button
@@ -173,7 +175,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
             loading={loading === teacher.id + '_reject'}
             onClick={() => onReject(teacher.id)}
           >
-            Reject
+            {t('pending.teacher.reject')}
           </Button>
           <Button
             variant="primary"
@@ -181,7 +183,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
             loading={loading === teacher.id + '_approve'}
             onClick={() => onApprove(teacher.id)}
           >
-            Approve
+            {t('pending.teacher.approve')}
           </Button>
         </div>
       </div>
@@ -192,6 +194,7 @@ const TeacherCard = ({ teacher, onApprove, onReject, loading }) => {
 // ─── Main page ─────────────────────────────────────────────────────────────
 
 const PendingTeachersPage = () => {
+  const { t } = useTranslation();
   const [teachers, setTeachers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
@@ -215,8 +218,8 @@ const PendingTeachersPage = () => {
     setActionLoading(id + '_approve');
     try {
       await userApi.updateUserStatus(id, 'active');
-      setTeachers((prev) => prev.filter((t) => t.id !== id));
-      toast.success('Teacher approved successfully');
+      setTeachers((prev) => prev.filter((teacher) => teacher.id !== id));
+      toast.success(t('pending.teacher.approved'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Approval failed');
     } finally {
@@ -228,8 +231,8 @@ const PendingTeachersPage = () => {
     setActionLoading(id + '_reject');
     try {
       await userApi.updateUserStatus(id, 'banned');
-      setTeachers((prev) => prev.filter((t) => t.id !== id));
-      toast.success('Teacher rejected');
+      setTeachers((prev) => prev.filter((teacher) => teacher.id !== id));
+      toast.success(t('pending.teacher.rejected'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Action failed');
     } finally {
@@ -238,7 +241,7 @@ const PendingTeachersPage = () => {
   };
 
   return (
-    <DashboardLayout title="Pending Approvals">
+    <DashboardLayout title={t('pending.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -247,26 +250,26 @@ const PendingTeachersPage = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="font-display text-2xl font-semibold text-forest-900">
-              Pending Approvals
+              {t('pending.title')}
             </h2>
             <p className="text-gray-500 text-sm mt-0.5">
-              Review and approve teacher account applications
+              {t('pending.subtitle')}
             </p>
           </div>
           {!loading && teachers.length > 0 && (
-            <Badge variant="pending">{teachers.length} pending</Badge>
+            <Badge variant="pending">{t('pending.badge', { count: teachers.length })}</Badge>
           )}
         </div>
 
         {loading ? (
           <div className="flex justify-center py-20"><Spinner size="lg" /></div>
         ) : error ? (
-          <EmptyState icon="⚠️" title="Failed to load" description={error} />
+          <EmptyState icon="⚠️" title={t('pending.error')} description={error} />
         ) : teachers.length === 0 ? (
           <EmptyState
             icon="✅"
-            title="All caught up"
-            description="There are no pending teacher applications right now."
+            title={t('pending.allCaughtUp.title')}
+            description={t('pending.allCaughtUp.desc')}
           />
         ) : (
           <div className="grid gap-4">

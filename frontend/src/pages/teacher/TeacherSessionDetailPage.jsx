@@ -1,10 +1,25 @@
+// src/pages/teacher/TeacherSessionDetailPage.jsx
+import { useEffect, useState, useCallback } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { sessionApi } from '../../api/sessionApi';
+import { attendanceApi } from '../../api/attendanceApi';
+import DashboardLayout from '../../components/layout/DashboardLayout';
+import Badge from '../../components/common/Badge';
+import Avatar from '../../components/common/Avatar';
+import Button from '../../components/common/Button';
+import Modal from '../../components/common/Modal';
+import { Spinner, EmptyState } from '../../components/common/EmptyState';
+import toast from 'react-hot-toast';
+
 // ─── Status change modal ───────────────────────────────────────────────────
 
 const TEACHER_STATUS_OPTIONS = [
-  { value: 'scheduled', label: 'Scheduled',     desc: 'Move back to scheduled',        color: 'amber' },
-  { value: 'live',      label: 'Start Session', desc: 'Open the session for students', color: 'green' },
-  { value: 'completed', label: 'End Session',   desc: 'Mark session as completed',     color: 'blue'  },
-  { value: 'cancelled', label: 'Cancel',        desc: 'Cancel this session',           color: 'red'   },
+  { value: 'scheduled', labelKey: 'sessionDetail.statusModal.teacher.scheduled.label', descKey: 'sessionDetail.statusModal.teacher.scheduled.desc', color: 'amber' },
+  { value: 'live',      labelKey: 'sessionDetail.statusModal.teacher.live.label',      descKey: 'sessionDetail.statusModal.teacher.live.desc',      color: 'green' },
+  { value: 'completed', labelKey: 'sessionDetail.statusModal.teacher.completed.label', descKey: 'sessionDetail.statusModal.teacher.completed.desc', color: 'blue'  },
+  { value: 'cancelled', labelKey: 'sessionDetail.statusModal.teacher.cancelled.label', descKey: 'sessionDetail.statusModal.teacher.cancelled.desc', color: 'red'   },
 ];
 
 const colorMap = {
@@ -15,6 +30,7 @@ const colorMap = {
 };
 
 const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm }) => {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -29,10 +45,10 @@ const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm }) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={() => { onClose(); setSelected(''); }} title="Change Session Status" size="sm">
+    <Modal isOpen={isOpen} onClose={() => { onClose(); setSelected(''); }} title={t('sessionDetail.statusModal.title')} size="sm">
       <div className="space-y-2 mb-5">
         <p className="text-sm text-gray-500 mb-3">
-          Current status:{' '}
+          {t('sessionDetail.statusModal.currentStatus')}{' '}
           <span className="font-medium text-gray-700 capitalize">{currentStatus}</span>
         </p>
         {options.map((opt) => (
@@ -50,8 +66,8 @@ const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm }) => {
               className="mt-0.5 accent-forest-600"
             />
             <div>
-              <p className="text-sm font-medium text-gray-800">{opt.label}</p>
-              <p className="text-xs text-gray-400">{opt.desc}</p>
+              <p className="text-sm font-medium text-gray-800">{t(opt.labelKey)}</p>
+              <p className="text-xs text-gray-400">{t(opt.descKey)}</p>
             </div>
           </label>
         ))}
@@ -74,26 +90,17 @@ const StatusModal = ({ isOpen, onClose, currentStatus, onConfirm }) => {
   );
 };
 
-// src/pages/teacher/TeacherSessionDetailPage.jsx
-import { useEffect, useState, useCallback } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { sessionApi } from '../../api/sessionApi';
-import { attendanceApi } from '../../api/attendanceApi';
-import DashboardLayout from '../../components/layout/DashboardLayout';
-import Badge from '../../components/common/Badge';
-import Avatar from '../../components/common/Avatar';
-import Button from '../../components/common/Button';
-import Modal from '../../components/common/Modal';
-import { Spinner, EmptyState } from '../../components/common/EmptyState';
-import toast from 'react-hot-toast';
+// ─── Status variant map ────────────────────────────────────────────────────
 
 const statusVariant = {
   draft: 'info', scheduled: 'pending', live: 'success',
   completed: 'info', cancelled: 'error',
 };
 
+// ─── Main page ─────────────────────────────────────────────────────────────
+
 const TeacherSessionDetailPage = () => {
+  const { t } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [session, setSession] = useState(null);
@@ -105,12 +112,12 @@ const TeacherSessionDetailPage = () => {
 
   // Attendance state
   const today = new Date().toISOString().slice(0, 10);
-  const [attendDate, setAttendDate]       = useState(today);
-  const [occurrenceDates, setOccDates]    = useState([]);
+  const [attendDate, setAttendDate]         = useState(today);
+  const [occurrenceDates, setOccDates]      = useState([]);
   const [attendStudents, setAttendStudents] = useState([]);
-  const [attendLoading, setAttendLoading] = useState(false);
-  const [attendDraft, setAttendDraft]     = useState({});
-  const [attendSaving, setAttendSaving]   = useState(false);
+  const [attendLoading, setAttendLoading]   = useState(false);
+  const [attendDraft, setAttendDraft]       = useState({});
+  const [attendSaving, setAttendSaving]     = useState(false);
 
   const load = async () => {
     try {
@@ -122,8 +129,8 @@ const TeacherSessionDetailPage = () => {
       setSession(sessionRes.data.data.session);
       setEnrollments(enrollRes.data.data.enrollments);
       setOccDates(datesRes.data.data.dates || []);
-    } catch (err) {
-      toast.error('Failed to load session');
+    } catch {
+      toast.error(t('sessionDetail.failedLoad'));
     } finally {
       setLoading(false);
     }
@@ -137,7 +144,6 @@ const TeacherSessionDetailPage = () => {
       const res = await attendanceApi.getSessionAttendance(id, date);
       const students = res.data.data.students || [];
       setAttendStudents(students);
-      // initialise draft from DB values
       const draft = {};
       students.forEach((s) => {
         draft[s.student_id] = {
@@ -147,7 +153,7 @@ const TeacherSessionDetailPage = () => {
       });
       setAttendDraft(draft);
     } catch {
-      toast.error('Failed to load attendance');
+      toast.error(t('sessionDetail.teacher.attendance.failedLoad'));
     } finally {
       setAttendLoading(false);
     }
@@ -167,12 +173,11 @@ const TeacherSessionDetailPage = () => {
           })
         )
       );
-      toast.success('Attendance saved');
-      // refresh occurrence dates list
+      toast.success(t('sessionDetail.teacher.attendance.saveSuccess'));
       const datesRes = await attendanceApi.getSessionDates(id);
       setOccDates(datesRes.data.data.dates || []);
     } catch {
-      toast.error('Failed to save attendance');
+      toast.error(t('sessionDetail.teacher.attendance.failedSave'));
     } finally {
       setAttendSaving(false);
     }
@@ -184,9 +189,9 @@ const TeacherSessionDetailPage = () => {
       const { data } = await sessionApi.updateStatus(id, status);
       setSession(data.data.session);
       const messages = {
-        live:      'Session is now live!',
-        completed: 'Session marked as completed',
-        cancelled: 'Session cancelled',
+        live:      t('sessionDetail.teacher.statusMsg.live'),
+        completed: t('sessionDetail.teacher.statusMsg.completed'),
+        cancelled: t('sessionDetail.teacher.statusMsg.cancelled'),
       };
       toast.success(messages[status] || `Session ${status}`);
     } catch (err) {
@@ -209,7 +214,7 @@ const TeacherSessionDetailPage = () => {
 
   if (loading) {
     return (
-      <DashboardLayout title="Session Detail">
+      <DashboardLayout title={t('sessionDetail.details.title')}>
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>
       </DashboardLayout>
     );
@@ -217,8 +222,8 @@ const TeacherSessionDetailPage = () => {
 
   if (!session) {
     return (
-      <DashboardLayout title="Session Detail">
-        <EmptyState icon="📅" title="Session not found" />
+      <DashboardLayout title={t('sessionDetail.details.title')}>
+        <EmptyState icon="📅" title={t('sessionDetail.notFound')} />
       </DashboardLayout>
     );
   }
@@ -227,8 +232,18 @@ const TeacherSessionDetailPage = () => {
   const approved = enrollments.filter((e) => e.status === 'approved');
   const others   = enrollments.filter((e) => !['pending','approved'].includes(e.status));
 
+  const profileFields = [
+    { labelKey: 'sessionDetail.teacher.studentModal.gender',       value: viewStudent?.gender },
+    { labelKey: 'sessionDetail.teacher.studentModal.language',     value: viewStudent?.preferred_language },
+    { labelKey: 'sessionDetail.teacher.studentModal.age',          value: viewStudent?.age },
+    { labelKey: 'sessionDetail.teacher.studentModal.level',        value: viewStudent?.current_level },
+    { labelKey: 'sessionDetail.teacher.studentModal.juz',          value: viewStudent?.total_juz_memorized },
+    { labelKey: 'sessionDetail.teacher.studentModal.guardian',     value: viewStudent?.guardian_name },
+    { labelKey: 'sessionDetail.teacher.studentModal.guardianPhone',value: viewStudent?.guardian_phone },
+  ];
+
   return (
-    <DashboardLayout title="Session Detail">
+    <DashboardLayout title={t('sessionDetail.details.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -243,7 +258,7 @@ const TeacherSessionDetailPage = () => {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Sessions
+          {t('sessionDetail.back')}
         </Link>
 
         {/* Header */}
@@ -291,7 +306,7 @@ const TeacherSessionDetailPage = () => {
                     ) : (
                       <span className="w-2 h-2 rounded-full bg-white" />
                     )}
-                    Start Session
+                    {t('sessionDetail.teacher.startSession')}
                   </button>
                 )}
                 {session.status === 'live' && (
@@ -302,7 +317,7 @@ const TeacherSessionDetailPage = () => {
                                transition-colors shadow-sm"
                   >
                     <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                    Rejoin Session
+                    {t('sessionDetail.teacher.rejoinSession')}
                   </button>
                 )}
                 <Button
@@ -310,7 +325,7 @@ const TeacherSessionDetailPage = () => {
                   size="md"
                   onClick={() => setShowStatusModal(true)}
                 >
-                  Change Status
+                  {t('sessionDetail.header.changeStatus')}
                 </Button>
               </div>
             )}
@@ -321,7 +336,7 @@ const TeacherSessionDetailPage = () => {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
             <h3 className="font-display font-semibold text-forest-900">
-              Student Enrollments
+              {t('sessionDetail.teacher.enrollments.title')}
             </h3>
             <div className="flex gap-2">
               <Badge variant="pending">{pending.length} pending</Badge>
@@ -330,14 +345,14 @@ const TeacherSessionDetailPage = () => {
           </div>
 
           {enrollments.length === 0 ? (
-            <EmptyState icon="👤" title="No enrollment requests yet" />
+            <EmptyState icon="👤" title={t('sessionDetail.enrollments.empty')} />
           ) : (
             <div className="space-y-2">
               {/* Pending first */}
               {pending.length > 0 && (
                 <div className="mb-4">
                   <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide mb-2">
-                    Pending Approval
+                    {t('sessionDetail.teacher.enrollments.pending')}
                   </p>
                   <AnimatePresence>
                     {pending.map((e) => (
@@ -356,7 +371,8 @@ const TeacherSessionDetailPage = () => {
                             {e.full_name}
                           </p>
                           <p className="text-xs text-gray-400">
-                            {e.current_level || 'No level'}{e.age ? ` · Age ${e.age}` : ''}
+                            {e.current_level || t('sessionDetail.teacher.noLevel')}
+                            {e.age ? ` · Age ${e.age}` : ''}
                             {e.total_juz_memorized > 0 && ` · ${e.total_juz_memorized} Juz`}
                           </p>
                         </div>
@@ -365,7 +381,7 @@ const TeacherSessionDetailPage = () => {
                             onClick={() => setViewStudent(e)}
                             className="text-xs text-gray-400 hover:text-forest-600 transition-colors"
                           >
-                            Profile
+                            {t('sessionDetail.teacher.profileLink')}
                           </button>
                           <Button
                             variant="danger"
@@ -373,7 +389,7 @@ const TeacherSessionDetailPage = () => {
                             loading={actionLoading === e.id + 'rejected'}
                             onClick={() => handleEnrollmentAction(e.id, 'rejected')}
                           >
-                            Reject
+                            {t('sessionDetail.teacher.rejectBtn')}
                           </Button>
                           <Button
                             variant="primary"
@@ -381,7 +397,7 @@ const TeacherSessionDetailPage = () => {
                             loading={actionLoading === e.id + 'approved'}
                             onClick={() => handleEnrollmentAction(e.id, 'approved')}
                           >
-                            Approve
+                            {t('sessionDetail.teacher.approveBtn')}
                           </Button>
                         </div>
                       </motion.div>
@@ -394,7 +410,7 @@ const TeacherSessionDetailPage = () => {
               {approved.length > 0 && (
                 <div className="mb-4">
                   <p className="text-xs font-semibold text-emerald-600 uppercase tracking-wide mb-2">
-                    Approved Students ({approved.length}/{session.max_students})
+                    {t('sessionDetail.teacher.enrollments.approved', { count: approved.length, max: session.max_students })}
                   </p>
                   {approved.map((e) => (
                     <div key={e.id} className="flex items-center gap-3 p-3 rounded-xl
@@ -403,7 +419,8 @@ const TeacherSessionDetailPage = () => {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-800 truncate">{e.full_name}</p>
                         <p className="text-xs text-gray-400">
-                          {e.current_level || 'No level'}{e.age ? ` · Age ${e.age}` : ''}
+                          {e.current_level || t('sessionDetail.teacher.noLevel')}
+                          {e.age ? ` · Age ${e.age}` : ''}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -412,14 +429,14 @@ const TeacherSessionDetailPage = () => {
                           className="text-xs text-forest-600 hover:text-forest-800
                                      font-medium transition-colors"
                         >
-                          Profile
+                          {t('sessionDetail.teacher.profileLink')}
                         </button>
                         <Link
                           to={`/teacher/students/${e.student_id}/assessments`}
                           className="text-xs text-gold-600 hover:text-gold-700
                                      font-medium transition-colors"
                         >
-                          Assessments
+                          {t('sessionDetail.teacher.assessmentsLink')}
                         </Link>
                         <Badge variant="success">Approved</Badge>
                       </div>
@@ -428,11 +445,11 @@ const TeacherSessionDetailPage = () => {
                 </div>
               )}
 
-              {/* Rejected/cancelled */}
+              {/* Rejected / withdrawn */}
               {others.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
-                    Rejected / Withdrawn
+                    {t('sessionDetail.teacher.enrollments.rejected')}
                   </p>
                   {others.map((e) => (
                     <div key={e.id} className="flex items-center gap-3 p-3 rounded-xl
@@ -451,10 +468,13 @@ const TeacherSessionDetailPage = () => {
             </div>
           )}
         </div>
+
         {/* Attendance section */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mt-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
-            <h3 className="font-display font-semibold text-forest-900">Attendance</h3>
+            <h3 className="font-display font-semibold text-forest-900">
+              {t('sessionDetail.teacher.attendance.title')}
+            </h3>
             <input
               type="date"
               value={attendDate}
@@ -467,7 +487,11 @@ const TeacherSessionDetailPage = () => {
           {attendLoading ? (
             <div className="flex justify-center py-8"><Spinner /></div>
           ) : attendStudents.length === 0 ? (
-            <EmptyState icon="📅" title="No approved students" description="Approve enrollments first to mark attendance." />
+            <EmptyState
+              icon="📅"
+              title={t('sessionDetail.teacher.attendance.empty.title')}
+              description={t('sessionDetail.teacher.attendance.empty.desc')}
+            />
           ) : (
             <>
               <div className="space-y-2 mb-4">
@@ -491,7 +515,6 @@ const TeacherSessionDetailPage = () => {
                       </div>
 
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        {/* Present / Absent toggle */}
                         <button
                           onClick={() =>
                             setAttendDraft((prev) => ({
@@ -505,10 +528,11 @@ const TeacherSessionDetailPage = () => {
                                         ? 'bg-green-100 text-green-700 hover:bg-green-200'
                                         : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                         >
-                          {isPresent ? '✓ Present' : '✗ Absent'}
+                          {isPresent
+                            ? t('sessionDetail.teacher.attendance.present')
+                            : t('sessionDetail.teacher.attendance.absent')}
                         </button>
 
-                        {/* Notes input */}
                         <input
                           type="text"
                           value={draft.notes || ''}
@@ -518,7 +542,7 @@ const TeacherSessionDetailPage = () => {
                               [s.student_id]: { ...prev[s.student_id], notes: e.target.value },
                             }))
                           }
-                          placeholder="Note (optional)"
+                          placeholder={t('sessionDetail.teacher.attendance.notePlaceholder')}
                           className="hidden sm:block text-xs border border-gray-200 rounded-lg
                                      px-2.5 py-1.5 w-40 focus:outline-none focus:ring-2
                                      focus:ring-forest-200 focus:border-forest-400"
@@ -536,7 +560,7 @@ const TeacherSessionDetailPage = () => {
                   loading={attendSaving}
                   onClick={handleSaveAttendance}
                 >
-                  Save Attendance
+                  {t('sessionDetail.teacher.attendance.saveBtn')}
                 </Button>
               </div>
             </>
@@ -559,7 +583,7 @@ const TeacherSessionDetailPage = () => {
       <Modal
         isOpen={!!viewStudent}
         onClose={() => setViewStudent(null)}
-        title="Student Profile"
+        title={t('sessionDetail.teacher.studentModal.title')}
         size="sm"
       >
         {viewStudent && (
@@ -572,18 +596,10 @@ const TeacherSessionDetailPage = () => {
               </div>
             </div>
             <div className="divide-y divide-gray-100">
-              {[
-                { label: 'Gender',         value: viewStudent.gender },
-                { label: 'Language',       value: viewStudent.preferred_language },
-                { label: 'Age',            value: viewStudent.age },
-                { label: 'Level',          value: viewStudent.current_level },
-                { label: 'Juz Memorized',  value: viewStudent.total_juz_memorized },
-                { label: 'Guardian',       value: viewStudent.guardian_name },
-                { label: 'Guardian Phone', value: viewStudent.guardian_phone },
-              ].map(({ label, value }) =>
+              {profileFields.map(({ labelKey, value }) =>
                 value ? (
-                  <div key={label} className="flex justify-between py-2 text-sm">
-                    <span className="text-gray-400">{label}</span>
+                  <div key={labelKey} className="flex justify-between py-2 text-sm">
+                    <span className="text-gray-400">{t(labelKey)}</span>
                     <span className="text-gray-700 capitalize">{value}</span>
                   </div>
                 ) : null

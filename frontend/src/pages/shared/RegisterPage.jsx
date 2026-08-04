@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../api/authApi';
 import { useFormError } from '../../hooks/useFormError';
 import AuthLayout from '../../components/layout/AuthLayout';
@@ -48,6 +49,7 @@ const SelectField = ({ label, name, value, onChange, disabled, error, children }
 const RegisterPage = () => {
   const [searchParams] = useSearchParams();
   const { error, parseError, clearError } = useFormError();
+  const { t } = useTranslation();
 
   const initialRole = searchParams.get('role') === 'teacher' ? 'teacher' : 'student';
 
@@ -135,26 +137,25 @@ const RegisterPage = () => {
             </svg>
           </div>
           <h2 className="text-2xl font-display font-semibold text-forest-900 mb-2">
-            Check your email
+            {t('auth.register.checkEmail')}
           </h2>
           <p className="text-gray-500 text-sm leading-relaxed mb-2">
-            We've sent a verification link to
+            {t('auth.register.sentLink')}
           </p>
           <p className="text-forest-700 font-medium text-sm mb-6">{form.email}</p>
           <p className="text-xs text-gray-400 leading-relaxed mb-6 max-w-xs mx-auto">
-            Click the link in the email to verify your account. The link expires in 24 hours.
-            Check your spam folder if you don't see it.
+            {t('auth.register.linkExpires')}
           </p>
           {form.role === 'teacher' && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-left">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-6 text-start">
               <p className="text-xs text-amber-700 leading-relaxed">
-                <span className="font-semibold">Note:</span> Teacher accounts require admin
-                approval after email verification before you can log in.
+                <span className="font-semibold">{t('auth.register.teacherNote')}</span>{' '}
+                {t('auth.register.teacherNoteText')}
               </p>
             </div>
           )}
           <Link to="/login">
-            <Button variant="primary" size="md">Back to Sign In</Button>
+            <Button variant="primary" size="md">{t('auth.register.backToSignIn')}</Button>
           </Link>
         </motion.div>
       </AuthLayout>
@@ -166,24 +167,24 @@ const RegisterPage = () => {
     <AuthLayout>
       <div className="mb-6">
         <h1 className="text-3xl font-display font-semibold text-forest-900 mb-1">
-          Create your account
+          {t('auth.register.title')}
         </h1>
         <p className="text-gray-500 text-sm">
-          Join as a{' '}
+          {t('auth.register.joinAs')}{' '}
           <button
             type="button"
             onClick={() => setForm(p => ({ ...p, role: 'student' }))}
             className={`font-medium transition-colors ${form.role === 'student' ? 'text-forest-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
-            Student
+            {t('role.student')}
           </button>
-          {' '}or{' '}
+          {' '}{t('auth.register.or')}{' '}
           <button
             type="button"
             onClick={() => setForm(p => ({ ...p, role: 'teacher' }))}
             className={`font-medium transition-colors ${form.role === 'teacher' ? 'text-forest-600' : 'text-gray-400 hover:text-gray-600'}`}
           >
-            Teacher
+            {t('role.teacher')}
           </button>
         </p>
       </div>
@@ -200,14 +201,14 @@ const RegisterPage = () => {
               ${form.role === r ? 'bg-white text-forest-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'}
             `}
           >
-            {r === 'student' ? '📖 Student' : '🎓 Teacher'}
+            {r === 'student' ? t('auth.register.studentLabel') : t('auth.register.teacherLabel')}
           </button>
         ))}
       </div>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <Input
-          label="Full name"
+          label={t('auth.register.fullName')}
           name="full_name"
           value={form.full_name}
           onChange={handleChange}
@@ -218,7 +219,7 @@ const RegisterPage = () => {
         />
 
         <Input
-          label="Email address"
+          label={t('auth.register.email')}
           type="email"
           name="email"
           value={form.email}
@@ -231,20 +232,20 @@ const RegisterPage = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <SelectField
-            label="Gender"
+            label={t('auth.register.gender')}
             name="gender"
             value={form.gender}
             onChange={handleChange}
             disabled={loading}
             error={fieldErrors.gender}
           >
-            <option value="">Select gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
+            <option value="">{t('auth.register.selectGender')}</option>
+            <option value="male">{t('auth.register.male')}</option>
+            <option value="female">{t('auth.register.female')}</option>
           </SelectField>
 
           <Input
-            label="Date of birth"
+            label={t('auth.register.dob')}
             type="date"
             name="date_of_birth"
             value={form.date_of_birth}
@@ -256,14 +257,14 @@ const RegisterPage = () => {
         </div>
 
         <SelectField
-          label="Preferred language"
+          label={t('auth.register.language')}
           name="preferred_language"
           value={form.preferred_language}
           onChange={handleChange}
           disabled={loading}
           error={fieldErrors.preferred_language}
         >
-          <option value="">Select language</option>
+          <option value="">{t('auth.register.selectLanguage')}</option>
           {LANGUAGES.map(l => (
             <option key={l.value} value={l.value}>{l.label}</option>
           ))}
@@ -271,23 +272,23 @@ const RegisterPage = () => {
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Password"
+            label={t('auth.register.password')}
             type="password"
             name="password"
             value={form.password}
             onChange={handleChange}
-            placeholder="Min. 8 characters"
+            placeholder={t('auth.register.passwordMin')}
             error={fieldErrors.password}
             disabled={loading}
             autoComplete="new-password"
           />
           <Input
-            label="Confirm password"
+            label={t('auth.register.confirmPassword')}
             type="password"
             name="confirm_password"
             value={form.confirm_password}
             onChange={handleChange}
-            placeholder="Repeat password"
+            placeholder={t('auth.register.repeatPassword')}
             error={fieldErrors.confirm_password}
             disabled={loading}
             autoComplete="new-password"
@@ -308,14 +309,14 @@ const RegisterPage = () => {
             ))}
             <span className="text-xs text-gray-400 ml-1">
               {[form.password.length >= 8, /[A-Z]/.test(form.password), /[0-9]/.test(form.password)].filter(Boolean).length === 3
-                ? 'Strong' : 'Weak'}
+                ? t('auth.register.strong') : t('auth.register.weak')}
             </span>
           </div>
         )}
 
         <div className="grid grid-cols-2 gap-3">
           <Input
-            label="Phone (optional)"
+            label={t('auth.register.phone')}
             type="tel"
             name="phone"
             value={form.phone}
@@ -324,7 +325,7 @@ const RegisterPage = () => {
             disabled={loading}
           />
           <Input
-            label="Nationality (optional)"
+            label={t('auth.register.nationality')}
             name="nationality"
             value={form.nationality}
             onChange={handleChange}
@@ -340,7 +341,7 @@ const RegisterPage = () => {
             transition={{ duration: 0.25 }}
           >
             <Input
-              label="CV / Resume link (optional)"
+              label={t('auth.register.cvLink')}
               type="url"
               name="cv_url"
               value={form.cv_url}
@@ -348,7 +349,7 @@ const RegisterPage = () => {
               placeholder="https://drive.google.com/your-cv"
               error={fieldErrors.cv_url}
               disabled={loading}
-              hint="Share a Google Drive, Dropbox, or any public link to your CV"
+              hint={t('auth.register.cvHint')}
             />
           </motion.div>
         )}
@@ -370,20 +371,20 @@ const RegisterPage = () => {
           loading={loading}
           className="mt-1"
         >
-          Create Account
+          {t('auth.register.submit')}
         </Button>
       </form>
 
       <p className="mt-5 text-center text-sm text-gray-500">
-        Already have an account?{' '}
+        {t('auth.register.alreadyHave')}{' '}
         <Link to="/login" className="text-forest-600 font-medium hover:text-forest-800 transition-colors">
-          Sign in
+          {t('auth.register.signIn')}
         </Link>
       </p>
 
       {form.role === 'teacher' && (
         <p className="mt-2 text-center text-xs text-forest-500">
-          Teacher accounts require admin approval before activation.
+          {t('auth.register.teacherApproval')}
         </p>
       )}
     </AuthLayout>

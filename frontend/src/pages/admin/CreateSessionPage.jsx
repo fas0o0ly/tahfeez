@@ -1,7 +1,8 @@
 // src/pages/admin/CreateSessionPage.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { sessionApi } from '../../api/sessionApi';
 import { userApi } from '../../api/userApi';
 import { useFormError } from '../../hooks/useFormError';
@@ -9,7 +10,6 @@ import DashboardLayout from '../../components/layout/DashboardLayout';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import toast from 'react-hot-toast';
-import { useEffect } from 'react';
 
 const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 
@@ -42,6 +42,7 @@ const Section = ({ title, children }) => (
 );
 
 const CreateSessionPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { error, parseError, clearError } = useFormError();
   const [loading, setLoading] = useState(false);
@@ -63,7 +64,6 @@ const CreateSessionPage = () => {
     agora_channel: '',
   });
 
-  // Load active teachers for assignment dropdown
   useEffect(() => {
     const load = async () => {
       try {
@@ -106,19 +106,17 @@ const CreateSessionPage = () => {
     try {
       const payload = { ...form, agora_channel: form.agora_channel.trim() };
 
-      // Convert empty strings to null for optional fields
       ['description', 'teacher_id', 'age_range_min', 'age_range_max'].forEach((f) => {
         if (payload[f] === '') payload[f] = null;
       });
 
-      // Convert numeric strings
       payload.duration_minutes = parseInt(payload.duration_minutes, 10);
       payload.max_students     = parseInt(payload.max_students, 10);
       if (payload.age_range_min) payload.age_range_min = parseInt(payload.age_range_min, 10);
       if (payload.age_range_max) payload.age_range_max = parseInt(payload.age_range_max, 10);
 
       const { data } = await sessionApi.createSession(payload);
-      toast.success('Session created successfully');
+      toast.success(t('createSession.success'));
       navigate(`/admin/sessions/${data.data.session.id}`);
     } catch (err) {
       parseError(err);
@@ -127,12 +125,11 @@ const CreateSessionPage = () => {
     }
   };
 
-  // Minimum datetime for scheduling (now + 15 min)
   const minDateTime = new Date(Date.now() + 15 * 60 * 1000)
     .toISOString().slice(0, 16);
 
   return (
-    <DashboardLayout title="Create Session">
+    <DashboardLayout title={t('createSession.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -148,20 +145,20 @@ const CreateSessionPage = () => {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Sessions
+          {t('createSession.back')}
         </Link>
 
         <div className="mb-6">
-          <h2 className="font-display text-2xl font-semibold text-forest-900">Create Session</h2>
-          <p className="text-gray-500 text-sm mt-0.5">Set up a new Halaqah session</p>
+          <h2 className="font-display text-2xl font-semibold text-forest-900">{t('createSession.title')}</h2>
+          <p className="text-gray-500 text-sm mt-0.5">{t('createSession.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Basic info */}
-          <Section title="Session Information">
+          <Section title={t('createSession.sections.info')}>
             <div className="space-y-4">
               <Input
-                label="Title"
+                label={t('createSession.fields.title')}
                 name="title"
                 value={form.title}
                 onChange={handleChange}
@@ -172,7 +169,7 @@ const CreateSessionPage = () => {
 
               <div>
                 <Input
-                  label="Agora channel name"
+                  label={t('createSession.fields.agoraChannel')}
                   name="agora_channel"
                   value={form.agora_channel}
                   onChange={handleChange}
@@ -181,13 +178,13 @@ const CreateSessionPage = () => {
                   required
                 />
                 <p className="text-xs text-gray-400 mt-1.5">
-                  Unique name used for the live video/audio channel. Letters, numbers, hyphens, and underscores only.
+                  {t('createSession.fields.agoraHint')}
                 </p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-gray-700 block mb-1.5">
-                  Description <span className="text-gray-400 font-normal">(optional)</span>
+                  {t('createSession.fields.description')} <span className="text-gray-400 font-normal">{t('createSession.fields.descriptionOptional')}</span>
                 </label>
                 <textarea
                   name="description"
@@ -195,7 +192,7 @@ const CreateSessionPage = () => {
                   onChange={handleChange}
                   disabled={loading}
                   rows={3}
-                  placeholder="Describe what students will learn in this session..."
+                  placeholder={t('createSession.fields.descriptionPlaceholder')}
                   className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm
                              focus:outline-none focus:ring-2 focus:ring-forest-200 focus:border-forest-400
                              transition-all resize-none disabled:bg-gray-50 placeholder:text-gray-400"
@@ -204,20 +201,20 @@ const CreateSessionPage = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <SelectField
-                  label="Session type"
+                  label={t('createSession.fields.sessionType')}
                   name="session_type"
                   value={form.session_type}
                   onChange={handleChange}
                   disabled={loading}
                   required
                 >
-                  <option value="one_on_one">One-on-One</option>
-                  <option value="group">Group</option>
-                  <option value="open">Open</option>
+                  <option value="one_on_one">{t('session.type.one_on_one')}</option>
+                  <option value="group">{t('session.type.group')}</option>
+                  <option value="open">{t('session.type.open')}</option>
                 </SelectField>
 
                 <Input
-                  label="Scheduled date & time"
+                  label={t('createSession.fields.scheduledAt')}
                   name="scheduled_at"
                   type="datetime-local"
                   value={form.scheduled_at}
@@ -228,7 +225,7 @@ const CreateSessionPage = () => {
                 />
 
                 <Input
-                  label="Duration (minutes)"
+                  label={t('createSession.fields.duration')}
                   name="duration_minutes"
                   type="number"
                   min={15}
@@ -239,7 +236,7 @@ const CreateSessionPage = () => {
                 />
 
                 <Input
-                  label="Max students"
+                  label={t('createSession.fields.maxStudents')}
                   name="max_students"
                   type="number"
                   min={1}
@@ -253,37 +250,37 @@ const CreateSessionPage = () => {
           </Section>
 
           {/* Eligibility */}
-          <Section title="Student Eligibility">
+          <Section title={t('createSession.sections.eligibility')}>
             <div className="grid sm:grid-cols-2 gap-4 mb-4">
               <SelectField
-                label="Gender"
+                label={t('createSession.fields.gender')}
                 name="session_gender"
                 value={form.session_gender}
                 onChange={handleChange}
                 disabled={loading}
                 required
               >
-                <option value="">Select gender</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
+                <option value="">{t('createSession.selectGender')}</option>
+                <option value="male">{t('common.gender.male')}</option>
+                <option value="female">{t('common.gender.female')}</option>
               </SelectField>
 
               <SelectField
-                label="Language"
+                label={t('createSession.fields.language')}
                 name="session_language"
                 value={form.session_language}
                 onChange={handleChange}
                 disabled={loading}
                 required
               >
-                <option value="">Select language</option>
+                <option value="">{t('createSession.selectLanguage')}</option>
                 {['arabic','english','malay','urdu','french','other'].map((l) => (
                   <option key={l} value={l}>{l.charAt(0).toUpperCase() + l.slice(1)}</option>
                 ))}
               </SelectField>
 
               <Input
-                label="Min age (optional)"
+                label={t('createSession.fields.minAge')}
                 name="age_range_min"
                 type="number"
                 min={4}
@@ -295,7 +292,7 @@ const CreateSessionPage = () => {
               />
 
               <Input
-                label="Max age (optional)"
+                label={t('createSession.fields.maxAge')}
                 name="age_range_max"
                 type="number"
                 min={5}
@@ -309,9 +306,9 @@ const CreateSessionPage = () => {
           </Section>
 
           {/* Schedule days */}
-          <Section title="Recurring Days">
+          <Section title={t('createSession.sections.days')}>
             <p className="text-xs text-gray-400 mb-3">
-              Select which days of the week this session recurs
+              {t('createSession.daysHint')}
             </p>
             <div className="flex flex-wrap gap-2">
               {DAYS.map((day) => (
@@ -334,21 +331,21 @@ const CreateSessionPage = () => {
           </Section>
 
           {/* Teacher assignment */}
-          <Section title="Teacher Assignment">
+          <Section title={t('createSession.sections.teacher')}>
             <SelectField
-              label="Assign teacher (optional)"
+              label={t('createSession.fields.teacher')}
               name="teacher_id"
               value={form.teacher_id}
               onChange={handleChange}
               disabled={loading}
             >
-              <option value="">Leave unassigned — teachers can request</option>
-              {teachers.map((t) => (
-                <option key={t.id} value={t.id}>{t.full_name} ({t.email})</option>
+              <option value="">{t('createSession.fields.teacherPlaceholder')}</option>
+              {teachers.map((teacher_item) => (
+                <option key={teacher_item.id} value={teacher_item.id}>{teacher_item.full_name} ({teacher_item.email})</option>
               ))}
             </SelectField>
             <p className="text-xs text-gray-400 mt-2">
-              If no teacher is assigned, the session stays as a draft until a teacher requests it.
+              {t('createSession.fields.teacherHint')}
             </p>
           </Section>
 
@@ -369,7 +366,7 @@ const CreateSessionPage = () => {
               <Button variant="secondary" size="md">Cancel</Button>
             </Link>
             <Button type="submit" variant="primary" size="md" loading={loading}>
-              Create Session
+              {t('createSession.submit')}
             </Button>
           </div>
         </form>

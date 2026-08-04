@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { assessmentApi } from '../../api/assessmentApi';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import AssessmentResultCard from '../../components/assessment/AssessmentResultCard';
@@ -9,6 +10,7 @@ import { EmptyState, Spinner, Pagination } from '../../components/common/EmptySt
 import toast from 'react-hot-toast';
 
 const AssessmentPage = () => {
+  const { t } = useTranslation();
   const [assessments, setAssessments] = useState([]);
   const [pagination, setPagination]   = useState(null);
   const [loading, setLoading]         = useState(true);
@@ -35,14 +37,14 @@ const AssessmentPage = () => {
     try {
       await assessmentApi.deleteAssessment(id);
       setAssessments((prev) => prev.filter((a) => a.id !== id));
-      toast.success('Assessment deleted');
+      toast.success(t('assess.student.deleteSuccess'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Failed to delete assessment');
     }
   };
 
   return (
-    <DashboardLayout title="My Assessments">
+    <DashboardLayout title={t('assess.student.pageTitle')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -52,14 +54,14 @@ const AssessmentPage = () => {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="font-display text-2xl font-semibold text-forest-900">
-              Recitation Assessments
+              {t('assess.student.title')}
             </h2>
             <p className="text-sm text-gray-400 mt-0.5">
-              AI-powered memorization checks
+              {t('assess.student.subtitle')}
             </p>
           </div>
           <Link to="/student/assessments/new">
-            <Button variant="primary" size="sm">New Assessment</Button>
+            <Button variant="primary" size="sm">{t('assess.student.newBtn')}</Button>
           </Link>
         </div>
 
@@ -72,18 +74,18 @@ const AssessmentPage = () => {
         {error && !loading && (
           <div className="text-center py-10">
             <p className="text-sm text-red-500 mb-3">{error}</p>
-            <Button variant="secondary" size="sm" onClick={fetchAssessments}>Try again</Button>
+            <Button variant="secondary" size="sm" onClick={fetchAssessments}>{t('assess.student.tryAgain')}</Button>
           </div>
         )}
 
         {!loading && !error && assessments.length === 0 && (
           <EmptyState
             icon="🎙️"
-            title="No assessments yet"
-            description="Start your first AI-powered recitation assessment and get instant Tajweed feedback."
+            title={t('assess.student.empty.title')}
+            description={t('assess.student.empty.desc')}
             action={
               <Link to="/student/assessments/new">
-                <Button variant="primary">Start Assessment</Button>
+                <Button variant="primary">{t('assess.student.startBtn')}</Button>
               </Link>
             }
           />

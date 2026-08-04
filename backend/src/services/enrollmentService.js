@@ -53,7 +53,7 @@ const requestEnrollment = async (sessionId, studentId) => {
     }
     if (session.age_range_max && student.calculated_age > session.age_range_max) {
       throw new AppError(
-        `Maximum age for this session is \${session.age_range_max}`, 400
+        `Maximum age for this session is ${session.age_range_max}`, 400
       );
     }
   }

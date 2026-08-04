@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useProfile } from '../../hooks/useProfile';
 import { sessionApi } from '../../api/sessionApi';
@@ -10,49 +11,13 @@ import Badge from '../../components/common/Badge';
 import Button from '../../components/common/Button';
 import { Spinner } from '../../components/common/EmptyState';
 
-const ACTIONS = [
-  {
-    icon: '📅',
-    label: 'My Sessions',
-    desc: 'View and manage your Halaqah sessions',
-    to: '/teacher/sessions',
-    accent: 'forest',
-  },
-  {
-    icon: '✅',
-    label: 'Mark Attendance',
-    desc: 'Record student attendance for a session',
-    to: '/teacher/sessions',
-    accent: 'forest',
-  },
-  {
-    icon: '📊',
-    label: 'Reports',
-    desc: 'Student progress, stats & certificates',
-    to: '/teacher/reports',
-    accent: 'gold',
-  },
-  {
-    icon: '🎤',
-    label: 'Assessments',
-    desc: 'Review student recitation assessments',
-    to: '/teacher/sessions',
-    accent: 'forest',
-  },
-  {
-    icon: '💬',
-    label: 'Messages',
-    desc: 'Chat with your students',
-    to: '/teacher/messages',
-    accent: 'blue',
-  },
-  {
-    icon: '👤',
-    label: 'Edit Profile',
-    desc: 'Update your teacher profile & bio',
-    to: '/teacher/profile',
-    accent: 'gray',
-  },
+const ACTION_DEFS = [
+  { icon: '📅', labelKey: 'dashboard.teacher.actions.sessions.label',    descKey: 'dashboard.teacher.actions.sessions.desc',    to: '/teacher/sessions',  accent: 'forest' },
+  { icon: '✅', labelKey: 'dashboard.teacher.actions.attendance.label',   descKey: 'dashboard.teacher.actions.attendance.desc',   to: '/teacher/sessions',  accent: 'forest' },
+  { icon: '📊', labelKey: 'dashboard.teacher.actions.reports.label',      descKey: 'dashboard.teacher.actions.reports.desc',      to: '/teacher/reports',   accent: 'gold'   },
+  { icon: '🎤', labelKey: 'dashboard.teacher.actions.assessments.label',  descKey: 'dashboard.teacher.actions.assessments.desc',  to: '/teacher/sessions',  accent: 'forest' },
+  { icon: '💬', labelKey: 'dashboard.teacher.actions.messages.label',     descKey: 'dashboard.teacher.actions.messages.desc',     to: '/teacher/messages',  accent: 'blue'   },
+  { icon: '👤', labelKey: 'dashboard.teacher.actions.profile.label',      descKey: 'dashboard.teacher.actions.profile.desc',      to: '/teacher/profile',   accent: 'gray'   },
 ];
 
 const accentHover = {
@@ -70,6 +35,7 @@ const accentIcon = {
 };
 
 const TeacherDashboard = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { profile, loading } = useProfile();
   const [liveSessions, setLiveSessions] = useState([]);
@@ -85,13 +51,15 @@ const TeacherDashboard = () => {
       .finally(() => setLiveLoading(false));
   }, []);
 
+  const ACTIONS = ACTION_DEFS.map((a) => ({ ...a, label: t(a.labelKey), desc: t(a.descKey) }));
+
   const completionItems = [
-    { label: 'Profile photo',        done: !!profile?.avatar_url },
-    { label: 'Bio written',          done: !!profile?.bio },
-    { label: 'Qualifications added', done: !!profile?.qualifications },
-    { label: 'Ijazah chain added',   done: !!profile?.ijazah_chain },
-    { label: 'Available days set',   done: (profile?.available_days?.length ?? 0) > 0 },
-    { label: 'CV link provided',     done: !!profile?.cv_url },
+    { label: t('dashboard.teacher.profileCompletion.photo'),   done: !!profile?.avatar_url },
+    { label: t('dashboard.teacher.profileCompletion.bio'),     done: !!profile?.bio },
+    { label: t('dashboard.teacher.profileCompletion.quals'),   done: !!profile?.qualifications },
+    { label: t('dashboard.teacher.profileCompletion.ijazah'),  done: !!profile?.ijazah_chain },
+    { label: t('dashboard.teacher.profileCompletion.days'),    done: (profile?.available_days?.length ?? 0) > 0 },
+    { label: t('dashboard.teacher.profileCompletion.cv'),      done: !!profile?.cv_url },
   ];
 
   const completedCount    = completionItems.filter((i) => i.done).length;
@@ -120,11 +88,11 @@ const TeacherDashboard = () => {
           <div className="relative z-10 flex items-center gap-4">
             <Avatar src={user?.avatar_url} name={user?.full_name} size="lg" />
             <div>
-              <p className="text-forest-300 text-sm mb-0.5">As-salamu alaykum</p>
+              <p className="text-forest-300 text-sm mb-0.5">{t('dashboard.teacher.greeting')}</p>
               <h2 className="font-display text-2xl font-semibold text-white">{user?.full_name}</h2>
               <div className="flex items-center gap-2 mt-1.5">
-                <Badge variant="teacher">Teacher</Badge>
-                {profile?.ijazah_verified && <Badge variant="gold">✓ Ijazah Verified</Badge>}
+                <Badge variant="teacher">{t('dashboard.teacher.badge.teacher')}</Badge>
+                {profile?.ijazah_verified && <Badge variant="gold">{t('dashboard.teacher.badge.ijazahVerified')}</Badge>}
               </div>
             </div>
           </div>
@@ -139,7 +107,7 @@ const TeacherDashboard = () => {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
               </span>
               <h3 className="font-display font-semibold text-forest-900 text-sm">
-                Live Now — {liveSessions.length} session{liveSessions.length > 1 ? 's' : ''} active
+                {t('dashboard.teacher.liveNow')} — {liveSessions.length} session{liveSessions.length > 1 ? 's' : ''} active
               </h3>
             </div>
             {liveSessions.map((s) => (
@@ -163,7 +131,7 @@ const TeacherDashboard = () => {
                       <path strokeLinecap="round" strokeLinejoin="round"
                         d="M15 10l4.553-2.069A1 1 0 0121 8.87v6.26a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                     </svg>
-                    Join Session
+                    {t('dashboard.teacher.joinSession')}
                   </button>
                 </Link>
               </div>
@@ -178,9 +146,9 @@ const TeacherDashboard = () => {
           <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-display font-semibold text-forest-900">Profile Completion</h3>
+                <h3 className="font-display font-semibold text-forest-900">{t('dashboard.teacher.profileCompletion.title')}</h3>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  A complete profile helps students find and trust you
+                  {t('dashboard.teacher.profileCompletion.subtitle')}
                 </p>
               </div>
               <span className="text-2xl font-display font-semibold text-forest-600">
@@ -217,7 +185,7 @@ const TeacherDashboard = () => {
             </div>
             {completionPercent < 100 && (
               <Link to="/teacher/profile">
-                <Button variant="primary" size="sm">Complete Your Profile</Button>
+                <Button variant="primary" size="sm">{t('dashboard.teacher.profileCompletion.cta')}</Button>
               </Link>
             )}
           </div>
@@ -225,8 +193,8 @@ const TeacherDashboard = () => {
 
         {/* ─── Quick Actions ─────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
-          <h3 className="font-display font-semibold text-forest-900 mb-1">Quick Actions</h3>
-          <p className="text-xs text-gray-400 mb-4">Jump to your most-used features</p>
+          <h3 className="font-display font-semibold text-forest-900 mb-1">{t('dashboard.teacher.quickActions.title')}</h3>
+          <p className="text-xs text-gray-400 mb-4">{t('dashboard.teacher.quickActions.subtitle')}</p>
           <div className="grid sm:grid-cols-2 gap-3">
             {ACTIONS.map((action, i) => (
               <motion.div

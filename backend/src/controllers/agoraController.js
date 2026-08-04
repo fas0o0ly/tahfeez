@@ -124,7 +124,6 @@ async function sendSignal(req, res, next) {
     const sessionId = req.params.id;
     const userId    = req.user.id;
     const { type, payload } = req.body;
-    console.log('[sendSignal] sessionId:', sessionId, '| userId:', userId, '| type:', type, '| payload:', payload);
 
     const allowed = ['hand', 'reaction', 'kick'];
     if (!allowed.includes(type)) {
@@ -157,7 +156,6 @@ async function sendSignal(req, res, next) {
 
     return success(res, null, 'Signal sent');
   } catch (err) {
-    console.error('[sendSignal] ERROR:', err.message, err.stack);
     next(err);
   }
 }
@@ -171,9 +169,10 @@ async function getSignals(req, res, next) {
   try {
     const sessionId = req.params.id;
     const userId    = req.user.id;
-    const since     = req.query.since
-      ? new Date(req.query.since)
-      : new Date(Date.now() - 10000);
+    const since =
+      req.query.since && !isNaN(Date.parse(req.query.since))
+        ? new Date(req.query.since)
+        : new Date(Date.now() - 10000);
 
     // Active hand raises — users whose current hand payload is 'raised'
     const handRaiseResult = await db.query(

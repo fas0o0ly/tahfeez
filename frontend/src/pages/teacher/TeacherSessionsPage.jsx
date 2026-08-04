@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { sessionApi } from '../../api/sessionApi';
 import { useSessions } from '../../hooks/useSessions';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -14,6 +15,7 @@ import toast from 'react-hot-toast';
 // ─── My sessions tab ───────────────────────────────────────────────────────
 
 const MySessionsTab = () => {
+  const { t } = useTranslation();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
@@ -47,8 +49,8 @@ const MySessionsTab = () => {
     return (
       <EmptyState
         icon="📅"
-        title="No sessions assigned"
-        description="You have no sessions yet. Request to teach an available session below."
+        title={t('sessions.teacher.noSessions.title')}
+        description={t('sessions.teacher.noSessions.desc')}
       />
     );
   }
@@ -69,7 +71,7 @@ const MySessionsTab = () => {
                 loading={actionLoading === session.id}
                 onClick={() => handleStart(session.id)}
               >
-                Start Session
+                {t('sessions.teacher.startSession')}
               </Button>
             )
           }
@@ -82,6 +84,7 @@ const MySessionsTab = () => {
 // ─── Available sessions tab ────────────────────────────────────────────────
 
 const AvailableSessionsTab = () => {
+  const { t } = useTranslation();
   const { sessions, pagination, loading, error, filters, updateFilter, setPage } =
     useSessions({ status: 'draft' });
   const [requestLoading, setRequestLoading] = useState(null);
@@ -92,7 +95,7 @@ const AvailableSessionsTab = () => {
     try {
       await sessionApi.requestToTeach(id);
       setRequested((prev) => new Set([...prev, id]));
-      toast.success('Request submitted — awaiting admin approval');
+      toast.success(t('sessions.teacher.requestSubmitted'));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Request failed');
     } finally { setRequestLoading(null); }
@@ -108,8 +111,8 @@ const AvailableSessionsTab = () => {
     return (
       <EmptyState
         icon="📭"
-        title="No available sessions"
-        description="There are no unassigned sessions right now. Check back later."
+        title={t('sessions.teacher.noAvailable.title')}
+        description={t('sessions.teacher.noAvailable.desc')}
       />
     );
   }
@@ -124,7 +127,7 @@ const AvailableSessionsTab = () => {
             index={i}
             action={
               requested.has(session.id) ? (
-                <Badge variant="pending">Request sent</Badge>
+                <Badge variant="pending">{t('sessions.teacher.requestSent')}</Badge>
               ) : (
                 <Button
                   variant="secondary"
@@ -132,7 +135,7 @@ const AvailableSessionsTab = () => {
                   loading={requestLoading === session.id}
                   onClick={() => handleRequest(session.id)}
                 >
-                  Request to Teach
+                  {t('sessions.teacher.requestToTeach')}
                 </Button>
               )
             }
@@ -151,38 +154,39 @@ const AvailableSessionsTab = () => {
 // ─── Main page ─────────────────────────────────────────────────────────────
 
 const TeacherSessionsPage = () => {
+  const { t } = useTranslation();
   const [tab, setTab] = useState('my');
 
   return (
-    <DashboardLayout title="Sessions">
+    <DashboardLayout title={t('sessions.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
       >
         <div className="mb-6">
-          <h2 className="font-display text-2xl font-semibold text-forest-900">Sessions</h2>
+          <h2 className="font-display text-2xl font-semibold text-forest-900">{t('sessions.title')}</h2>
           <p className="text-gray-500 text-sm mt-0.5">
-            Manage your sessions and request new ones
+            {t('sessions.teacher.subtitle')}
           </p>
         </div>
 
         {/* Tabs */}
         <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mb-6 w-fit">
           {[
-            { key: 'my',        label: 'My Sessions' },
-            { key: 'available', label: 'Available to Teach' },
-          ].map((t) => (
+            { key: 'my',        label: t('sessions.teacher.tabs.my') },
+            { key: 'available', label: t('sessions.teacher.tabs.available') },
+          ].map((tab_item) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
+              key={tab_item.key}
+              onClick={() => setTab(tab_item.key)}
               className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                ${tab === t.key
+                ${tab === tab_item.key
                   ? 'bg-white text-forest-700 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
                 }`}
             >
-              {t.label}
+              {tab_item.label}
             </button>
           ))}
         </div>

@@ -68,25 +68,15 @@ app.use(
 
 // ─── Rate limiters ─────────────────────────────────────────────────────────
 
-// Strict limiter for auth endpoints — prevents brute force
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, message: 'Too many auth attempts. Try again in 15 minutes.' },
-});
-
-// General limiter for everything else
+// General limiter for non-auth routes
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 2000,
+  max: 500,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests. Slow down.' },
 });
 
-app.use('/api/auth', authLimiter);
 app.use(generalLimiter);
 
 // ─── Body parsing ──────────────────────────────────────────────────────────
@@ -99,7 +89,7 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(
     morgan('combined', {
       stream: { write: (msg) => logger.http(msg.trim()) },
-      skip: (req) => req.url === '/api/health',
+      skip: (req) => req.url === '/api/health' || req.path === '/api/auth/verify-email',
     })
   );
 }
@@ -108,7 +98,6 @@ if (process.env.NODE_ENV !== 'test') {
 app.get('/api/health', (req, res) => {
   return success(res, {
     status: 'ok',
-    env: process.env.NODE_ENV,
     timestamp: new Date().toISOString(),
   }, 'Server is healthy');
 });

@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import { useFormError } from '../../hooks/useFormError';
 import { authApi } from '../../api/authApi';
@@ -16,6 +17,7 @@ const LoginPage = () => {
   const location = useLocation();
   const { login } = useAuth();
   const { error, parseError, clearError } = useFormError();
+  const { t } = useTranslation();
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ const LoginPage = () => {
     e.preventDefault();
 
     if (!form.email || !form.password) {
-      parseError({ response: { data: { message: 'Please fill in all fields' } } });
+      parseError({ response: { data: { message: t('auth.login.fillAllFields') } } });
       return;
     }
 
@@ -48,7 +50,7 @@ const LoginPage = () => {
 
     try {
       const user = await login(form.email, form.password);
-      toast.success(`Welcome back, ${user.full_name.split(' ')[0]}`);
+      toast.success(t('auth.login.welcomeBack', { name: user.full_name.split(' ')[0] }));
       const destination = from || ROLE_DASHBOARDS[user.role];
       navigate(destination, { replace: true });
     } catch (err) {
@@ -64,7 +66,7 @@ const LoginPage = () => {
 
   const handleResend = async () => {
     if (!form.email) {
-      toast.error('Please enter your email address above first');
+      toast.error(t('auth.login.enterEmail'));
       return;
     }
 
@@ -74,15 +76,15 @@ const LoginPage = () => {
       setResendSent(true);
       setShowResend(false);
       clearError();
-      toast.success('Verification email sent — check your inbox');
+      toast.success(t('auth.login.resendSent'));
     } catch (err) {
       const message = err?.response?.data?.message || '';
       if (message.toLowerCase().includes('already verified')) {
-        toast.success('Your account is already verified. Try signing in again.');
+        toast.success(t('auth.login.alreadyVerified'));
         setShowResend(false);
         clearError();
       } else {
-        toast.error('Failed to resend. Please try again in a moment.');
+        toast.error(t('auth.login.resendFailed'));
       }
     } finally {
       setResendLoading(false);
@@ -98,7 +100,7 @@ const LoginPage = () => {
           transition={{ duration: 0.4 }}
           className="text-3xl font-display font-semibold text-forest-900 mb-1"
         >
-          Welcome back
+          {t('auth.login.title')}
         </motion.h1>
         <motion.p
           initial={{ opacity: 0 }}
@@ -106,7 +108,7 @@ const LoginPage = () => {
           transition={{ duration: 0.4, delay: 0.1 }}
           className="text-gray-500 text-sm"
         >
-          Sign in to continue your Quran journey
+          {t('auth.login.subtitle')}
         </motion.p>
       </div>
 
@@ -119,7 +121,7 @@ const LoginPage = () => {
         noValidate
       >
         <Input
-          label="Email address"
+          label={t('auth.login.email')}
           type="email"
           name="email"
           value={form.email}
@@ -131,7 +133,7 @@ const LoginPage = () => {
 
         <div>
           <Input
-            label="Password"
+            label={t('auth.login.password')}
             type="password"
             name="password"
             value={form.password}
@@ -145,7 +147,7 @@ const LoginPage = () => {
               to="/forgot-password"
               className="text-xs text-forest-600 hover:text-forest-800 transition-colors"
             >
-              Forgot password?
+              {t('auth.login.forgotPw')}
             </Link>
           </div>
         </div>
@@ -176,7 +178,7 @@ const LoginPage = () => {
               className="px-4 py-3 rounded-xl bg-amber-50 border border-amber-200"
             >
               <p className="text-amber-800 text-sm mb-2.5">
-                Didn't receive the verification email?
+                {t('auth.login.resendPrompt')}
               </p>
               <Button
                 type="button"
@@ -185,7 +187,7 @@ const LoginPage = () => {
                 loading={resendLoading}
                 onClick={handleResend}
               >
-                Resend Verification Email
+                {t('auth.login.resendBtn')}
               </Button>
             </motion.div>
           )}
@@ -202,9 +204,7 @@ const LoginPage = () => {
               className="px-4 py-3 rounded-xl bg-forest-50 border border-forest-200"
             >
               <p className="text-forest-700 text-sm">
-                ✓ Verification email sent to{' '}
-                <span className="font-medium">{form.email}</span>.
-                Check your inbox and spam folder.
+                {t('auth.login.verifiedSentTo', { email: form.email })}
               </p>
             </motion.div>
           )}
@@ -217,25 +217,25 @@ const LoginPage = () => {
           loading={loading}
           className="mt-2"
         >
-          Sign In
+          {t('auth.login.submit')}
         </Button>
       </motion.form>
 
       <div className="flex items-center gap-3 my-6">
         <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-xs text-gray-400">New to Tahfeez?</span>
+        <span className="text-xs text-gray-400">{t('auth.login.newToTahfeez')}</span>
         <div className="flex-1 h-px bg-gray-200" />
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Link to="/register?role=student">
           <Button variant="secondary" size="md" className="w-full">
-            Join as Student
+            {t('auth.login.joinStudent')}
           </Button>
         </Link>
         <Link to="/register?role=teacher">
           <Button variant="secondary" size="md" className="w-full">
-            Join as Teacher
+            {t('auth.login.joinTeacher')}
           </Button>
         </Link>
       </div>

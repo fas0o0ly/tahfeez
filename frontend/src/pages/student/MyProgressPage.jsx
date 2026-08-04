@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../context/AuthContext';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import Badge from '../../components/common/Badge';
@@ -14,13 +15,6 @@ const statusColors = {
   certified:      'admin',
 };
 
-const statusLabel = {
-  not_started:    'Not Started',
-  in_progress:    'In Progress',
-  needs_revision: 'Needs Revision',
-  completed:      'Completed',
-  certified:      'Certified (Hafiz)',
-};
 
 const gradeColors = {
   excellent: 'text-green-600',
@@ -40,7 +34,15 @@ const fmtDuration = (secs) => {
 };
 
 const MyProgressPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
+  const statusLabel = {
+    not_started:    t('progress.status.not_started'),
+    in_progress:    t('progress.status.in_progress'),
+    needs_revision: t('progress.status.needs_revision'),
+    completed:      t('progress.status.completed'),
+    certified:      t('progress.status.certified'),
+  };
   const [progress, setProgress]         = useState(null);
   const [attendance, setAttendance]     = useState(null);
   const [notes, setNotes]               = useState([]);
@@ -86,7 +88,7 @@ const MyProgressPage = () => {
   };
 
   return (
-    <DashboardLayout title="My Progress">
+    <DashboardLayout title={t('myProgress.title')}>
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -100,11 +102,11 @@ const MyProgressPage = () => {
             {/* ── Progress Record ─────────────────────────────────────── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
               <h2 className="font-display font-semibold text-forest-900 text-lg mb-4">
-                Hifz Progress
+                {t('myProgress.hifz.title')}
               </h2>
 
               {!progress ? (
-                <p className="text-sm text-gray-400">No progress record yet. Your teacher will update this after sessions.</p>
+                <p className="text-sm text-gray-400">{t('myProgress.hifz.noRecord')}</p>
               ) : (
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
@@ -113,14 +115,14 @@ const MyProgressPage = () => {
                         {progress.total_juz_memorized ?? 0}
                         <span className="text-sm text-gray-400 font-body font-normal">/30</span>
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">Juz memorized</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('myProgress.hifz.juzMemorized')}</p>
                     </div>
                     <div className="bg-forest-50 rounded-xl p-3 text-center">
                       <p className="text-2xl font-display font-semibold text-forest-700">
                         {progress.total_surahs_memorized ?? 0}
                         <span className="text-sm text-gray-400 font-body font-normal">/114</span>
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">Surahs memorized</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('myProgress.hifz.surahsMemorized')}</p>
                     </div>
                     <div className="bg-forest-50 rounded-xl p-3 text-center">
                       <p className={`text-lg font-semibold ${gradeColors[progress.accuracy_grade] || 'text-gray-500'}`}>
@@ -128,19 +130,19 @@ const MyProgressPage = () => {
                           ? progress.accuracy_grade.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())
                           : '—'}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5">Accuracy grade</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{t('myProgress.hifz.accuracyGrade')}</p>
                     </div>
                     <div className="bg-forest-50 rounded-xl p-3 text-center flex flex-col items-center justify-center">
                       <Badge variant={statusColors[progress.status] || 'gray'}>
                         {statusLabel[progress.status] || progress.status}
                       </Badge>
-                      <p className="text-xs text-gray-500 mt-1.5">Status</p>
+                      <p className="text-xs text-gray-500 mt-1.5">{t('myProgress.hifz.statusLabel')}</p>
                     </div>
                   </div>
 
                   {progress.teacher_notes && (
                     <div className="bg-amber-50 border border-amber-100 rounded-xl px-4 py-3">
-                      <p className="text-xs font-medium text-amber-700 mb-1">Teacher Notes</p>
+                      <p className="text-xs font-medium text-amber-700 mb-1">{t('myProgress.hifz.teacherNotes')}</p>
                       <p className="text-sm text-amber-800 leading-relaxed whitespace-pre-line">
                         {progress.teacher_notes}
                       </p>
@@ -149,7 +151,7 @@ const MyProgressPage = () => {
 
                   {progress.last_reviewed_at && (
                     <p className="text-xs text-gray-400 mt-3">
-                      Last reviewed: {fmtDate(progress.last_reviewed_at)}
+                      {t('myProgress.hifz.lastReviewed', { date: fmtDate(progress.last_reviewed_at) })}
                     </p>
                   )}
                 </>
@@ -160,7 +162,7 @@ const MyProgressPage = () => {
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display font-semibold text-forest-900 text-lg">
-                  Attendance History
+                  {t('myProgress.attendance.title')}
                 </h2>
                 {attendance && attendance.total > 0 && (
                   <div className="text-right">
@@ -168,7 +170,7 @@ const MyProgressPage = () => {
                       {attendance.rate_pct ?? 0}%
                     </p>
                     <p className="text-xs text-gray-400">
-                      {attendance.attended}/{attendance.total} sessions attended
+                      {t('myProgress.attendance.sessionsAttended', { attended: attendance.attended, total: attendance.total })}
                     </p>
                   </div>
                 )}
@@ -177,8 +179,8 @@ const MyProgressPage = () => {
               {!attendance || attendance.total === 0 ? (
                 <EmptyState
                   icon="📅"
-                  title="No attendance records yet"
-                  description="Your attendance will appear here once you join sessions."
+                  title={t('myProgress.attendance.noRecords.title')}
+                  description={t('myProgress.attendance.noRecords.desc')}
                 />
               ) : (
                 <>
@@ -197,7 +199,7 @@ const MyProgressPage = () => {
                             ${row.present
                               ? 'bg-green-50 text-green-700'
                               : 'bg-red-50 text-red-600'}`}>
-                            {row.present ? '✓ Present' : '✗ Absent'}
+                            {row.present ? t('myProgress.attendance.present') : t('myProgress.attendance.absent')}
                           </span>
                         </div>
                       </div>
@@ -211,7 +213,7 @@ const MyProgressPage = () => {
                                  font-medium py-2 border border-forest-100 rounded-xl
                                  hover:bg-forest-50 transition-colors"
                     >
-                      Load more
+                      {t('myProgress.attendance.loadMore')}
                     </button>
                   )}
                 </>
@@ -221,14 +223,14 @@ const MyProgressPage = () => {
             {/* ── Teacher Notes ────────────────────────────────────────── */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-card p-6">
               <h2 className="font-display font-semibold text-forest-900 text-lg mb-4">
-                Teacher Feedback
+                {t('myProgress.feedback.title')}
               </h2>
 
               {notes.length === 0 ? (
                 <EmptyState
                   icon="💬"
-                  title="No feedback yet"
-                  description="Notes from your teacher will appear here."
+                  title={t('myProgress.feedback.empty.title')}
+                  description={t('myProgress.feedback.empty.desc')}
                 />
               ) : (
                 <div className="space-y-3">
