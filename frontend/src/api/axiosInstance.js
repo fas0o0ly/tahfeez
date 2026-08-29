@@ -9,7 +9,7 @@ export const clearToken = ()      => { _accessToken = null; };
 export const getToken   = ()      => _accessToken;
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: 'https://tahfeez-production.up.railway.app/api',
   withCredentials: true, // sends httpOnly refresh token cookie
   headers: { 'Content-Type': 'application/json' },
   timeout: 15000,
